@@ -227,7 +227,7 @@
             <h2>⚙️ Configuration</h2>
             <div class="input-group">
                 <label for="baseUrl">Base URL:</label>
-                <input type="text" id="baseUrl" value="http://localhost:6000" placeholder="http://localhost:6000">
+                <input type="text" id="baseUrl" value="http://localhost:4000" placeholder="http://localhost:4000">
             </div>
             <div class="input-group">
                 <label for="token">JWT Token (Auto-filled after login/register):</label>
@@ -278,6 +278,11 @@
                 </div>
                 <div class="endpoint-body">
                     <p><strong>Endpoint:</strong> /me</p>
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">🔑 Requires Authentication</p>
+                    <div class="form-row">
+                        <label>JWT Token (optional - uses global token if empty):</label>
+                        <input type="text" id="me-token" placeholder="Leave empty to use global token">
+                    </div>
                     <button onclick="getCurrentUser()">Get Me</button>
                     <div id="me-response"></div>
                 </div>
@@ -308,6 +313,11 @@
                 </div>
                 <div class="endpoint-body">
                     <p><strong>Endpoint:</strong> /projects</p>
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">🔑 Requires Authentication</p>
+                    <div class="form-row">
+                        <label>JWT Token (optional - uses global token if empty):</label>
+                        <input type="text" id="create-token" placeholder="Leave empty to use global token">
+                    </div>
                     <div class="form-row">
                         <label>Project Name:</label>
                         <input type="text" id="create-name" placeholder="my-project">
@@ -329,6 +339,11 @@
                 </div>
                 <div class="endpoint-body">
                     <p><strong>Endpoint:</strong> /projects</p>
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">🔑 Requires Authentication</p>
+                    <div class="form-row">
+                        <label>JWT Token (optional - uses global token if empty):</label>
+                        <input type="text" id="get-projects-token" placeholder="Leave empty to use global token">
+                    </div>
                     <button onclick="getAllProjects()">Get Projects</button>
                     <div id="get-projects-response"></div>
                 </div>
@@ -342,6 +357,11 @@
                 </div>
                 <div class="endpoint-body">
                     <p><strong>Endpoint:</strong> /projects/:id</p>
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">🔑 Requires Authentication</p>
+                    <div class="form-row">
+                        <label>JWT Token (optional - uses global token if empty):</label>
+                        <input type="text" id="get-project-token" placeholder="Leave empty to use global token">
+                    </div>
                     <div class="form-row">
                         <label>Project ID:</label>
                         <input type="text" id="get-project-id" placeholder="1">
@@ -359,6 +379,11 @@
                 </div>
                 <div class="endpoint-body">
                     <p><strong>Endpoint:</strong> /projects/:id</p>
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">🔑 Requires Authentication</p>
+                    <div class="form-row">
+                        <label>JWT Token (optional - uses global token if empty):</label>
+                        <input type="text" id="update-token" placeholder="Leave empty to use global token">
+                    </div>
                     <div class="form-row">
                         <label>Project ID:</label>
                         <input type="text" id="update-id" placeholder="1">
@@ -384,6 +409,11 @@
                 </div>
                 <div class="endpoint-body">
                     <p><strong>Endpoint:</strong> /projects/:id/upload</p>
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">🔑 Requires Authentication</p>
+                    <div class="form-row">
+                        <label>JWT Token (optional - uses global token if empty):</label>
+                        <input type="text" id="upload-token" placeholder="Leave empty to use global token">
+                    </div>
                     <div class="form-row">
                         <label>Project ID:</label>
                         <input type="text" id="upload-project-id" placeholder="1">
@@ -409,6 +439,11 @@
                 </div>
                 <div class="endpoint-body">
                     <p><strong>Endpoint:</strong> /projects/:id</p>
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">🔑 Requires Authentication</p>
+                    <div class="form-row">
+                        <label>JWT Token (optional - uses global token if empty):</label>
+                        <input type="text" id="delete-token" placeholder="Leave empty to use global token">
+                    </div>
                     <div class="form-row">
                         <label>Project ID:</label>
                         <input type="text" id="delete-id" placeholder="1">
@@ -495,9 +530,11 @@
         }
 
         async function getCurrentUser() {
+            const customToken = document.getElementById('me-token').value.trim();
+            const token = customToken || getToken();
             try {
                 const response = await fetch(`${getBaseUrl()}/me`, {
-                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await response.json();
                 showResponse('me-response', data, !response.ok);
@@ -522,6 +559,8 @@
         }
 
         async function createProject() {
+            const customToken = document.getElementById('create-token').value.trim();
+            const token = customToken || getToken();
             const name = document.getElementById('create-name').value;
             const description = document.getElementById('create-description').value;
             try {
@@ -529,7 +568,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${getToken()}`
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({ name, description })
                 });
@@ -541,9 +580,11 @@
         }
 
         async function getAllProjects() {
+            const customToken = document.getElementById('get-projects-token').value.trim();
+            const token = customToken || getToken();
             try {
                 const response = await fetch(`${getBaseUrl()}/projects`, {
-                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await response.json();
                 showResponse('get-projects-response', data, !response.ok);
@@ -553,10 +594,12 @@
         }
 
         async function getProject() {
+            const customToken = document.getElementById('get-project-token').value.trim();
+            const token = customToken || getToken();
             const id = document.getElementById('get-project-id').value;
             try {
                 const response = await fetch(`${getBaseUrl()}/projects/${id}`, {
-                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await response.json();
                 showResponse('get-project-response', data, !response.ok);
@@ -566,6 +609,8 @@
         }
 
         async function updateProject() {
+            const customToken = document.getElementById('update-token').value.trim();
+            const token = customToken || getToken();
             const id = document.getElementById('update-id').value;
             const name = document.getElementById('update-name').value;
             const description = document.getElementById('update-description').value;
@@ -574,7 +619,7 @@
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${getToken()}`
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({ name, description })
                 });
@@ -586,9 +631,21 @@
         }
 
         async function uploadFile() {
-            const projectId = document.getElementById('upload-project-id').value;
-            const path = document.getElementById('upload-path').value;
+            const customToken = document.getElementById('upload-token').value.trim();
+            const token = customToken || getToken();
+            const projectId = document.getElementById('upload-project-id').value.trim();
+            const path = document.getElementById('upload-path').value.trim();
             const fileInput = document.getElementById('upload-file');
+            
+            if (!projectId) {
+                showResponse('upload-response', { error: 'Please enter a Project ID' }, true);
+                return;
+            }
+            
+            if (!path) {
+                showResponse('upload-response', { error: 'Please enter a file path' }, true);
+                return;
+            }
             
             if (!fileInput.files[0]) {
                 showResponse('upload-response', { error: 'Please select a file' }, true);
@@ -603,7 +660,7 @@
                 const response = await fetch(`${getBaseUrl()}/projects/${projectId}/upload`, {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${getToken()}`
+                        'Authorization': `Bearer ${token}`
                     },
                     body: formData
                 });
@@ -615,6 +672,8 @@
         }
 
         async function deleteProject() {
+            const customToken = document.getElementById('delete-token').value.trim();
+            const token = customToken || getToken();
             const id = document.getElementById('delete-id').value;
             const deleteFromGithub = document.getElementById('delete-from-github').checked;
             try {
@@ -622,7 +681,7 @@
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${getToken()}`
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({ deleteFromGithub })
                 });

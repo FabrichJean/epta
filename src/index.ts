@@ -16,7 +16,8 @@ const prisma = new PrismaClient();
 
 // Initialize Express app
 const app = express();
-const PORT = process.env.PORT || 6000;
+const PORT = parseInt(process.env.PORT || '6000', 10);
+const HOST = process.env.HOST || '0.0.0.0';
 
 // CORS Configuration
 const corsOptions = {
@@ -96,8 +97,11 @@ app.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`🚀 Server is running on:`);
+  console.log(`   - Local:   http://localhost:${PORT}`);
+  console.log(`   - Network: http://${HOST}:${PORT}`);
+  console.log(`   - Playground: http://localhost:${PORT}/playground`);
 });
 
 // Graceful shutdown

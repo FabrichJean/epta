@@ -64,6 +64,13 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
       });
       repoData = data;
     } catch (error: any) {
+      if (error.status === 401) {
+        return res.status(401).json({ 
+          error: 'GitHub authentication failed', 
+          message: 'Your GitHub token is invalid or has been revoked. Please log in again with a new token.',
+          details: error.message 
+        });
+      }
       if (error.status === 422) {
         return res.status(400).json({ error: 'Repository name already exists on GitHub' });
       }
@@ -220,6 +227,13 @@ router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
         project: updatedProject,
       });
     } catch (error: any) {
+      if (error.status === 401) {
+        return res.status(401).json({ 
+          error: 'GitHub authentication failed', 
+          message: 'Your GitHub token is invalid or has been revoked. Please log in again with a new token.',
+          details: error.message 
+        });
+      }
       if (error.status === 404) {
         return res.status(404).json({ error: 'GitHub repository not found' });
       }
@@ -367,6 +381,13 @@ router.post('/:id/upload', authenticate, upload.single('file'), async (req: Auth
         },
       });
     } catch (error: any) {
+      if (error.status === 401) {
+        return res.status(401).json({ 
+          error: 'GitHub authentication failed', 
+          message: 'Your GitHub token is invalid or has been revoked. Please log in again with a new token.',
+          details: error.message 
+        });
+      }
       if (error.status === 404) {
         return res.status(404).json({ error: 'Repository not found on GitHub' });
       }
