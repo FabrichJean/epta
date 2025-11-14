@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import { Octokit } from '@octokit/rest';
+import { encryptToken, decryptToken } from '../utils/crypto';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -44,8 +44,8 @@ router.post('/register', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'User with this email or username already exists' });
     }
 
-    // Hash the GitHub Personal Token
-    const hashedGhp = await bcrypt.hash(ghp, 10);
+    // Encrypt the GitHub Personal Token
+    const encryptedGhp = encryptToken(ghp);
 
     // Create user with GitHub data
     const user = await prisma.user.create({
@@ -54,7 +54,7 @@ router.post('/register', async (req: Request, res: Response) => {
         email: githubUser.email || `${githubUser.login}@github.user`,
         username: githubUser.login,
         avatarUrl: githubUser.avatar_url,
-        githubToken: hashedGhp,
+        githubToken: encryptedGhp,
       },
     });
 
@@ -91,21 +91,27 @@ router.post('/login', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'GitHub Personal Token is required' });
     }
 
-    // Get all users (since we can't query by hashed token)
-    const users = await prisma.user.findMany();
-
-    // Find user by comparing hashed tokens
-    let authenticatedUser = null;
-    for (const user of users) {
-      const isValid = await bcrypt.compare(ghp, user.githubToken);
-      if (isValid) {
-        authenticatedUser = user;
-        break;
+    // Verify token with GitHub API
+    const octokit = new Octokit({ auth: ghp });
+    let githubUser;
+    
+    try {
+      const { data } = await octokit.rest.users.getAuthenticated();
+      githubUser = data;
+    } catch (error: any) {
+      if (error.status === 401) {
+        return res.status(401).json({ error: 'Invalid GitHub Personal Token' });
       }
+      throw error;
     }
 
+    // Find user by username
+    const authenticatedUser = await prisma.user.findUnique({
+      where: { username: githubUser.login }
+    });
+
     if (!authenticatedUser) {
-      return res.status(401).json({ error: 'Invalid GitHub Personal Token' });
+      return res.status(401).json({ error: 'User not found. Please register first.' });
     }
 
     // Generate JWT token
@@ -122,6 +128,8 @@ router.post('/login', async (req: Request, res: Response) => {
         id: authenticatedUser.id,
         name: authenticatedUser.name,
         email: authenticatedUser.email,
+        username: authenticatedUser.username,
+        avatarUrl: authenticatedUser.avatarUrl,
       },
     });
   } catch (error) {

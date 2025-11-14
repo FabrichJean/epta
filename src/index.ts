@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/auth';
 import githubRoutes from './routes/github';
+import projectRoutes from './routes/projects';
 import { authenticate, AuthRequest } from './middleware/auth';
 
 // Load environment variables
@@ -31,6 +32,9 @@ app.use('/auth', authRoutes);
 
 // GitHub routes
 app.use('/api', githubRoutes);
+
+// Project routes (protected)
+app.use('/projects', projectRoutes);
 
 // Protected route example
 app.get('/users', authenticate, async (req: AuthRequest, res: Response) => {
