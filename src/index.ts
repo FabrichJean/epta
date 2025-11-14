@@ -1,0 +1,86 @@
+import express, { Request, Response } from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { PrismaClient } from '@prisma/client';
+import authRoutes from './routes/auth';
+import githubRoutes from './routes/github';
+import { authenticate, AuthRequest } from './middleware/auth';
+
+// Load environment variables
+dotenv.config();
+
+// Initialize Prisma Client
+const prisma = new PrismaClient();
+
+// Initialize Express app
+const app = express();
+const PORT = process.env.PORT || 6000;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Routes
+app.get('/', (req: Request, res: Response) => {
+  res.json({ message: 'Welcome to Express + TypeScript + Prisma API with JWT Auth' });
+});
+
+// Auth routes
+app.use('/auth', authRoutes);
+
+// GitHub routes
+app.use('/api', githubRoutes);
+
+// Protected route example
+app.get('/users', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// Protected route - Get current user
+app.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch user' });
+  }
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`🚀 Server is running on http://localhost:${PORT}`);
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  await prisma.$disconnect();
+  process.exit(0);
+});
