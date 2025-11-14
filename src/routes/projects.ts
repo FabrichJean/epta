@@ -318,7 +318,7 @@ router.post('/:id/upload', authenticate, upload.single('file'), async (req: Auth
   try {
     const userId = req.userId!;
     const projectId = parseInt(req.params.id);
-    const { path } = req.body;
+    let { path } = req.body;
     const file = req.file;
 
     if (!file) {
@@ -327,6 +327,19 @@ router.post('/:id/upload', authenticate, upload.single('file'), async (req: Auth
 
     if (!path) {
       return res.status(400).json({ error: 'File path is required' });
+    }
+
+    // Get file extension from the uploaded file
+    const fileExtension = file.originalname.split('.').pop()?.toLowerCase();
+    const pathExtension = path.split('.').pop()?.toLowerCase();
+
+    // Validate that path extension matches file extension
+    if (fileExtension && pathExtension !== fileExtension) {
+      return res.status(400).json({ 
+        error: 'File extension mismatch',
+        message: `The file '${file.originalname}' has extension '.${fileExtension}' but the path '${path}' has extension '.${pathExtension}'`,
+        suggestion: `Try using: ${path.substring(0, path.lastIndexOf('.') + 1)}${fileExtension} or images/${file.originalname}`
+      });
     }
 
     // Get user's GitHub token from database

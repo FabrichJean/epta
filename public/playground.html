@@ -270,6 +270,28 @@
                 </div>
             </div>
 
+            <!-- Update GitHub Token -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                    <span class="endpoint-title">Update GitHub Token</span>
+                    <span class="method put">PUT</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Endpoint:</strong> /auth/update-token</p>
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">🔑 Requires Authentication - Updates your stored GitHub token</p>
+                    <div class="form-row">
+                        <label>JWT Token (optional - uses global token if empty):</label>
+                        <input type="text" id="update-ghp-token" placeholder="Leave empty to use global token">
+                    </div>
+                    <div class="form-row">
+                        <label>New GitHub Personal Token:</label>
+                        <input type="password" id="update-ghp" placeholder="ghp_xxxxxxxxxxxx">
+                    </div>
+                    <button onclick="updateGithubToken()">Update Token</button>
+                    <div id="update-ghp-response"></div>
+                </div>
+            </div>
+
             <!-- Get Current User -->
             <div class="endpoint">
                 <div class="endpoint-header" onclick="toggleEndpoint(this)">
@@ -419,12 +441,15 @@
                         <input type="text" id="upload-project-id" placeholder="1">
                     </div>
                     <div class="form-row">
-                        <label>File Path in Repository:</label>
-                        <input type="text" id="upload-path" placeholder="src/index.js">
+                        <label>Select File:</label>
+                        <input type="file" id="upload-file" onchange="updatePathSuggestion()">
                     </div>
                     <div class="form-row">
-                        <label>Select File:</label>
-                        <input type="file" id="upload-file">
+                        <label>File Path in Repository:</label>
+                        <input type="text" id="upload-path" placeholder="Select a file first">
+                        <small style="color: #666; font-size: 0.85em; display: block; margin-top: 5px;">
+                            💡 Examples: <code>images/photo.jpg</code>, <code>src/app.js</code>, <code>docs/README.md</code>
+                        </small>
                     </div>
                     <button onclick="uploadFile()">Upload File</button>
                     <div id="upload-response"></div>
@@ -482,6 +507,43 @@
             tokenInput.value = token;
         }
 
+        function updatePathSuggestion() {
+            const fileInput = document.getElementById('upload-file');
+            const pathInput = document.getElementById('upload-path');
+            
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const fileName = file.name;
+                const extension = fileName.split('.').pop()?.toLowerCase();
+                
+                // Suggest path based on file type
+                const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'ico'];
+                const videoExtensions = ['mp4', 'avi', 'mov', 'webm'];
+                const docExtensions = ['md', 'txt', 'pdf', 'doc', 'docx'];
+                const codeExtensions = ['js', 'ts', 'jsx', 'tsx', 'py', 'java', 'cpp', 'c', 'go', 'rs'];
+                const styleExtensions = ['css', 'scss', 'sass', 'less'];
+                
+                let suggestedPath = '';
+                
+                if (imageExtensions.includes(extension)) {
+                    suggestedPath = `images/${fileName}`;
+                } else if (videoExtensions.includes(extension)) {
+                    suggestedPath = `videos/${fileName}`;
+                } else if (docExtensions.includes(extension)) {
+                    suggestedPath = `docs/${fileName}`;
+                } else if (codeExtensions.includes(extension)) {
+                    suggestedPath = `src/${fileName}`;
+                } else if (styleExtensions.includes(extension)) {
+                    suggestedPath = `styles/${fileName}`;
+                } else {
+                    suggestedPath = `assets/${fileName}`;
+                }
+                
+                pathInput.value = suggestedPath;
+                pathInput.placeholder = suggestedPath;
+            }
+        }
+
         function showResponse(elementId, data, isError = false) {
             const element = document.getElementById(elementId);
             const cssClass = isError ? 'error' : 'success';
@@ -526,6 +588,26 @@
                 showResponse('login-response', data, !response.ok);
             } catch (error) {
                 showResponse('login-response', { error: error.message }, true);
+            }
+        }
+
+        async function updateGithubToken() {
+            const customToken = document.getElementById('update-ghp-token').value.trim();
+            const token = customToken || getToken();
+            const ghp = document.getElementById('update-ghp').value;
+            try {
+                const response = await fetch(`${getBaseUrl()}/auth/update-token`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ ghp })
+                });
+                const data = await response.json();
+                showResponse('update-ghp-response', data, !response.ok);
+            } catch (error) {
+                showResponse('update-ghp-response', { error: error.message }, true);
             }
         }
 
