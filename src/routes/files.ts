@@ -6,6 +6,25 @@ import { decryptToken } from '../utils/crypto';
 const router = Router();
 const prisma = new PrismaClient();
 
+// Helper function to get user's decrypted GitHub token
+async function getUserGithubToken(userId: number): Promise<string | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { githubToken: true }
+  });
+  
+  if (!user?.githubToken) {
+    return null;
+  }
+  
+  try {
+    return decryptToken(user.githubToken);
+  } catch (error) {
+    console.error('Error decrypting token:', error);
+    return null;
+  }
+}
+
 // Serve file by short code (public route)
 router.get('/:shortCode', async (req: Request, res: Response) => {
   try {
@@ -26,12 +45,33 @@ router.get('/:shortCode', async (req: Request, res: Response) => {
       data: { clicks: shortUrl.clicks + 1 }
     });
 
+    // If the URL has a userId, use their GitHub token for authentication
+    let githubToken: string | null = null;
+    if (shortUrl.userId) {
+      githubToken = await getUserGithubToken(shortUrl.userId);
+    }
+
     // Fetch the file content from GitHub
     try {
-      const response = await fetch(shortUrl.originalUrl);
+      const headers: Record<string, string> = {
+        'User-Agent': 'EPTA-File-Server'
+      };
+      
+      // Add authentication if we have a token
+      if (githubToken) {
+        headers['Authorization'] = `token ${githubToken}`;
+      }
+
+      const response = await fetch(shortUrl.originalUrl, { headers });
       
       if (!response.ok) {
-        throw new Error('Failed to fetch file from GitHub');
+        if (response.status === 401 || response.status === 403) {
+          return res.status(403).json({ 
+            error: 'Access denied',
+            message: 'This file is from a private repository and the access token is no longer valid.'
+          });
+        }
+        throw new Error(`GitHub returned ${response.status}`);
       }
 
       // Get the content type from GitHub response
@@ -42,21 +82,33 @@ router.get('/:shortCode', async (req: Request, res: Response) => {
       
       // Set appropriate headers
       res.setHeader('Content-Type', contentType);
-      res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+      res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+      res.setHeader('Access-Control-Allow-Origin', '*'); // Allow CORS
       
       // Extract filename from originalUrl if possible
       const urlParts = shortUrl.originalUrl.split('/');
-      const filename = urlParts[urlParts.length - 1];
+      const filename = urlParts[urlParts.length - 1].split('?')[0]; // Remove query params
       if (filename) {
         res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
       }
 
       // Send the file
       res.send(Buffer.from(buffer));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching file from GitHub:', error);
-      // Fallback to redirect
-      res.redirect(shortUrl.originalUrl);
+      
+      // If authentication failed and we have the original URL, try redirect as fallback
+      if (!githubToken && error.message.includes('401')) {
+        return res.status(403).json({ 
+          error: 'Access denied',
+          message: 'This file requires authentication. Please contact the file owner.'
+        });
+      }
+      
+      return res.status(500).json({ 
+        error: 'Failed to fetch file',
+        message: 'The file could not be retrieved from GitHub. It may have been deleted or moved.'
+      });
     }
   } catch (error: any) {
     console.error('Serve file error:', error);
