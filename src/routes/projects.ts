@@ -1,11 +1,18 @@
 import { Router, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { Octokit } from '@octokit/rest';
+import multer from 'multer';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { decryptToken } from '../utils/crypto';
 
 const router = Router();
 const prisma = new PrismaClient();
+
+// Configure multer for memory storage
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
 
 // Helper function to get user's decrypted GitHub token
 async function getUserGithubToken(userId: number): Promise<string | null> {
@@ -287,6 +294,91 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res: Response) => {
     console.error('Delete project error:', error);
     res.status(500).json({ 
       error: 'Failed to delete project',
+      message: error.message 
+    });
+  }
+});
+
+// Upload file to GitHub repository
+router.post('/:id/upload', authenticate, upload.single('file'), async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const projectId = parseInt(req.params.id);
+    const { path } = req.body;
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ error: 'File is required' });
+    }
+
+    if (!path) {
+      return res.status(400).json({ error: 'File path is required' });
+    }
+
+    // Get user's GitHub token from database
+    const ghp = await getUserGithubToken(userId);
+    if (!ghp) {
+      return res.status(401).json({ error: 'GitHub token not found. Please re-authenticate.' });
+    }
+
+    // Get project
+    const project = await prisma.project.findFirst({
+      where: { 
+        id: projectId,
+        userId 
+      },
+      include: {
+        user: {
+          select: { username: true }
+        }
+      }
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const octokit = new Octokit({ auth: ghp });
+    const repoName = (project.metadata as any)?.fullName?.split('/')[1] || project.name;
+    const owner = project.user.username;
+
+    // Convert file buffer to base64
+    const content = file.buffer.toString('base64');
+
+    // Upload file to GitHub
+    try {
+      const { data } = await octokit.rest.repos.createOrUpdateFileContents({
+        owner,
+        repo: repoName,
+        path: path,
+        message: `Upload ${file.originalname}`,
+        content: content,
+      });
+
+      res.json({
+        message: 'File uploaded successfully',
+        file: {
+          name: file.originalname,
+          path: path,
+          size: file.size,
+          sha: data.content?.sha,
+          url: data.content?.html_url,
+          downloadUrl: data.content?.download_url,
+        },
+      });
+    } catch (error: any) {
+      if (error.status === 404) {
+        return res.status(404).json({ error: 'Repository not found on GitHub' });
+      }
+      if (error.status === 422) {
+        return res.status(400).json({ error: 'Invalid file path or repository state' });
+      }
+      throw error;
+    }
+  } catch (error: any) {
+    console.error('Upload file error:', error);
+    res.status(500).json({ 
+      error: 'Failed to upload file',
       message: error.message 
     });
   }
