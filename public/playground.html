@@ -393,6 +393,35 @@
                 </div>
             </div>
 
+            <!-- Get Project Contents -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                    <span class="endpoint-title">Get Project Contents</span>
+                    <span class="method get">GET</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Endpoint:</strong> /projects/:id/contents/*</p>
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">🔑 Requires Authentication - Browse repository files and folders</p>
+                    <div class="form-row">
+                        <label>JWT Token (optional - uses global token if empty):</label>
+                        <input type="text" id="contents-token" placeholder="Leave empty to use global token">
+                    </div>
+                    <div class="form-row">
+                        <label>Project ID:</label>
+                        <input type="text" id="contents-project-id" placeholder="1">
+                    </div>
+                    <div class="form-row">
+                        <label>Path (leave empty for root):</label>
+                        <input type="text" id="contents-path" placeholder="src/utils or leave empty">
+                        <small style="color: #666; font-size: 0.85em; display: block; margin-top: 5px;">
+                            💡 Examples: <code>src</code>, <code>images</code>, <code>docs/README.md</code>, or empty for root
+                        </small>
+                    </div>
+                    <button onclick="getProjectContents()">Get Contents</button>
+                    <div id="contents-response"></div>
+                </div>
+            </div>
+
             <!-- Update Project -->
             <div class="endpoint">
                 <div class="endpoint-header" onclick="toggleEndpoint(this)">
@@ -749,6 +778,24 @@
                 showResponse('get-project-response', data, !response.ok);
             } catch (error) {
                 showResponse('get-project-response', { error: error.message }, true);
+            }
+        }
+
+        async function getProjectContents() {
+            const customToken = document.getElementById('contents-token').value.trim();
+            const token = customToken || getToken();
+            const projectId = document.getElementById('contents-project-id').value.trim();
+            const path = document.getElementById('contents-path').value.trim();
+            
+            try {
+                const url = `${getBaseUrl()}/projects/${projectId}/contents/${path}`;
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                showResponse('contents-response', data, !response.ok);
+            } catch (error) {
+                showResponse('contents-response', { error: error.message }, true);
             }
         }
 

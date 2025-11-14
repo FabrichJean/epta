@@ -167,6 +167,105 @@ router.get('/:id', authenticate, async (req: AuthRequest, res: Response) => {
   }
 });
 
+// Get contents of a path in project repository
+router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const projectId = parseInt(req.params.id);
+    const path = req.params[0] || ''; // Get everything after /contents/
+
+    // Get user's GitHub token
+    const ghp = await getUserGithubToken(userId);
+    if (!ghp) {
+      return res.status(401).json({ error: 'GitHub token not found. Please re-authenticate.' });
+    }
+
+    // Get project
+    const project = await prisma.project.findFirst({
+      where: { 
+        id: projectId,
+        userId 
+      },
+      include: {
+        user: {
+          select: { username: true }
+        }
+      }
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const octokit = new Octokit({ auth: ghp });
+    const repoName = (project.metadata as any)?.fullName?.split('/')[1] || project.name;
+    const owner = project.user.username;
+
+    try {
+      // Get contents from GitHub
+      const { data } = await octokit.rest.repos.getContent({
+        owner,
+        repo: repoName,
+        path: path
+      });
+
+      // If it's a single file, return file details
+      if (!Array.isArray(data)) {
+        const fileData: any = data;
+        return res.json({
+          type: 'file',
+          name: fileData.name,
+          path: fileData.path,
+          size: fileData.size,
+          sha: fileData.sha,
+          url: fileData.html_url,
+          downloadUrl: fileData.download_url,
+          content: fileData.content, // Base64 encoded content
+          encoding: fileData.encoding
+        });
+      }
+
+      // If it's a directory, return list of contents
+      const contents = data.map((item: any) => ({
+        type: item.type, // 'file' or 'dir'
+        name: item.name,
+        path: item.path,
+        size: item.size,
+        sha: item.sha,
+        url: item.html_url,
+        downloadUrl: item.download_url
+      }));
+
+      res.json({
+        type: 'dir',
+        path: path || '/',
+        contents: contents
+      });
+    } catch (error: any) {
+      if (error.status === 401) {
+        return res.status(401).json({ 
+          error: 'GitHub authentication failed', 
+          message: 'Your GitHub token is invalid or has been revoked. Please log in again with a new token.',
+          details: error.message 
+        });
+      }
+      if (error.status === 404) {
+        return res.status(404).json({ 
+          error: 'Path not found',
+          message: `The path '${path}' does not exist in this repository.`
+        });
+      }
+      throw error;
+    }
+  } catch (error: any) {
+    console.error('Get contents error:', error);
+    res.status(500).json({ 
+      error: 'Failed to get contents',
+      message: error.message 
+    });
+  }
+});
+
 // Update project - updates GitHub repo name and database
 router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
   try {
