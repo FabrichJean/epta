@@ -392,7 +392,7 @@ router.post('/:id/upload', authenticate, upload.single('file'), async (req: Auth
         content: content,
       });
 
-      // Generate short URL for the download URL
+      // Generate short code for file serving
       let shortCode = generateShortCode();
       let attempts = 0;
       while (await prisma.shortUrl.findUnique({ where: { shortCode } })) {
@@ -403,7 +403,7 @@ router.post('/:id/upload', authenticate, upload.single('file'), async (req: Auth
         }
       }
 
-      // Create short URL in database
+      // Create short URL in database for direct file access
       const shortUrl = await prisma.shortUrl.create({
         data: {
           shortCode,
@@ -413,6 +413,7 @@ router.post('/:id/upload', authenticate, upload.single('file'), async (req: Auth
       });
 
       const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const publicUrl = `${baseUrl}/f/${shortCode}`;
 
       res.json({
         message: 'File uploaded successfully',
@@ -422,7 +423,8 @@ router.post('/:id/upload', authenticate, upload.single('file'), async (req: Auth
           size: file.size,
           sha: data.content?.sha,
           url: data.content?.html_url,
-          downloadUrl: `${baseUrl}/s/${shortCode}`,
+          publicUrl: publicUrl,  // Public permanent link
+          downloadUrl: `${baseUrl}/s/${shortCode}`,  // Redirect link
           originalDownloadUrl: data.content?.download_url,
         },
       });

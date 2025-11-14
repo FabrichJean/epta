@@ -7,6 +7,7 @@ import authRoutes from './routes/auth';
 import githubRoutes from './routes/github';
 import projectRoutes from './routes/projects';
 import shortUrlRoutes from './routes/shorturl';
+import filesRoutes from './routes/files';
 import { authenticate, AuthRequest } from './middleware/auth';
 
 // Load environment variables
@@ -57,6 +58,11 @@ app.use('/projects', projectRoutes);
 
 // Short URL routes
 app.use('/url', shortUrlRoutes); // For /url/shorten, /url/my-urls, etc.
+
+// File serving routes (public) - must be before /s/ shorturl redirect
+app.use('/f', filesRoutes);      // For /f/:shortCode to serve files directly
+
+// Short URL redirect (public)
 app.use('/s', shortUrlRoutes);   // For /s/:shortCode redirect
 
 // Protected route example
