@@ -14,6 +14,16 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
+// Helper function to generate short code
+function generateShortCode(length: number = 6): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
 // Helper function to get user's decrypted GitHub token
 async function getUserGithubToken(userId: number): Promise<string | null> {
   const user = await prisma.user.findUnique({
@@ -382,6 +392,28 @@ router.post('/:id/upload', authenticate, upload.single('file'), async (req: Auth
         content: content,
       });
 
+      // Generate short URL for the download URL
+      let shortCode = generateShortCode();
+      let attempts = 0;
+      while (await prisma.shortUrl.findUnique({ where: { shortCode } })) {
+        shortCode = generateShortCode();
+        attempts++;
+        if (attempts > 10) {
+          shortCode = generateShortCode(8);
+        }
+      }
+
+      // Create short URL in database
+      const shortUrl = await prisma.shortUrl.create({
+        data: {
+          shortCode,
+          originalUrl: data.content?.download_url || '',
+          userId
+        }
+      });
+
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+
       res.json({
         message: 'File uploaded successfully',
         file: {
@@ -390,7 +422,8 @@ router.post('/:id/upload', authenticate, upload.single('file'), async (req: Auth
           size: file.size,
           sha: data.content?.sha,
           url: data.content?.html_url,
-          downloadUrl: data.content?.download_url,
+          downloadUrl: `${baseUrl}/s/${shortCode}`,
+          originalDownloadUrl: data.content?.download_url,
         },
       });
     } catch (error: any) {

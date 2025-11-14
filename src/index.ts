@@ -6,6 +6,7 @@ import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/auth';
 import githubRoutes from './routes/github';
 import projectRoutes from './routes/projects';
+import shortUrlRoutes from './routes/shorturl';
 import { authenticate, AuthRequest } from './middleware/auth';
 
 // Load environment variables
@@ -53,6 +54,10 @@ app.use('/api', githubRoutes);
 
 // Project routes (protected)
 app.use('/projects', projectRoutes);
+
+// Short URL routes
+app.use('/url', shortUrlRoutes); // For /url/shorten, /url/my-urls, etc.
+app.use('/s', shortUrlRoutes);   // For /s/:shortCode redirect
 
 // Protected route example
 app.get('/users', authenticate, async (req: AuthRequest, res: Response) => {

@@ -483,6 +483,68 @@
                     <div id="delete-project-response"></div>
                 </div>
             </div>
+
+            <!-- Shorten URL -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                    <span class="endpoint-title">Shorten URL</span>
+                    <span class="method post">POST</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Endpoint:</strong> /url/shorten</p>
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">🔑 Requires Authentication - Create a short URL</p>
+                    <div class="form-row">
+                        <label>JWT Token (optional - uses global token if empty):</label>
+                        <input type="text" id="shorten-token" placeholder="Leave empty to use global token">
+                    </div>
+                    <div class="form-row">
+                        <label>Long URL:</label>
+                        <input type="text" id="shorten-url" placeholder="https://example.com/very/long/url">
+                    </div>
+                    <button onclick="shortenUrl()">Shorten URL</button>
+                    <div id="shorten-response"></div>
+                </div>
+            </div>
+
+            <!-- Get My URLs -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                    <span class="endpoint-title">Get My Short URLs</span>
+                    <span class="method get">GET</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Endpoint:</strong> /url/my-urls</p>
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">🔑 Requires Authentication</p>
+                    <div class="form-row">
+                        <label>JWT Token (optional - uses global token if empty):</label>
+                        <input type="text" id="myurls-token" placeholder="Leave empty to use global token">
+                    </div>
+                    <button onclick="getMyUrls()">Get My URLs</button>
+                    <div id="myurls-response"></div>
+                </div>
+            </div>
+
+            <!-- Delete Short URL -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                    <span class="endpoint-title">Delete Short URL</span>
+                    <span class="method delete">DELETE</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Endpoint:</strong> /url/:shortCode</p>
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">🔑 Requires Authentication</p>
+                    <div class="form-row">
+                        <label>JWT Token (optional - uses global token if empty):</label>
+                        <input type="text" id="delete-url-token" placeholder="Leave empty to use global token">
+                    </div>
+                    <div class="form-row">
+                        <label>Short Code:</label>
+                        <input type="text" id="delete-url-code" placeholder="abc123">
+                    </div>
+                    <button onclick="deleteShortUrl()">Delete Short URL</button>
+                    <div id="delete-url-response"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -773,6 +835,57 @@
                 showResponse('delete-project-response', { error: error.message }, true);
             }
         }
+
+        async function shortenUrl() {
+            const customToken = document.getElementById('shorten-token').value.trim();
+            const token = customToken || getToken();
+            const url = document.getElementById('shorten-url').value.trim();
+            try {
+                const response = await fetch(`${getBaseUrl()}/url/shorten`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ url })
+                });
+                const data = await response.json();
+                showResponse('shorten-response', data, !response.ok);
+            } catch (error) {
+                showResponse('shorten-response', { error: error.message }, true);
+            }
+        }
+
+        async function getMyUrls() {
+            const customToken = document.getElementById('myurls-token').value.trim();
+            const token = customToken || getToken();
+            try {
+                const response = await fetch(`${getBaseUrl()}/url/my-urls`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                showResponse('myurls-response', data, !response.ok);
+            } catch (error) {
+                showResponse('myurls-response', { error: error.message }, true);
+            }
+        }
+
+        async function deleteShortUrl() {
+            const customToken = document.getElementById('delete-url-token').value.trim();
+            const token = customToken || getToken();
+            const shortCode = document.getElementById('delete-url-code').value.trim();
+            try {
+                const response = await fetch(`${getBaseUrl()}/url/${shortCode}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                showResponse('delete-url-response', data, !response.ok);
+            } catch (error) {
+                showResponse('delete-url-response', { error: error.message }, true);
+            }
+        }
     </script>
 </body>
 </html>
+
