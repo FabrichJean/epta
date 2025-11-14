@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Playground - EPTA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .config-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .config-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="file"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .endpoints {
+            display: grid;
+            gap: 20px;
+        }
+
+        .endpoint {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .endpoint:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        .endpoint-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .endpoint-title {
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .method {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .method.post {
+            background: #28a745;
+        }
+
+        .method.get {
+            background: #007bff;
+        }
+
+        .method.put {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .method.delete {
+            background: #dc3545;
+        }
+
+        .endpoint-body {
+            padding: 20px;
+            display: none;
+        }
+
+        .endpoint-body.active {
+            display: block;
+        }
+
+        .form-row {
+            margin-bottom: 15px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+        }
+
+        .response h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .response pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .token-display {
+            background: #e7f3ff;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .success {
+            border-left-color: #28a745;
+        }
+
+        .error {
+            border-left-color: #dc3545;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 API Playground</h1>
+        <p class="subtitle">Test all endpoints of the EPTA API</p>
+
+        <div class="config-section">
+            <h2>⚙️ Configuration</h2>
+            <div class="input-group">
+                <label for="baseUrl">Base URL:</label>
+                <input type="text" id="baseUrl" value="http://localhost:6000" placeholder="http://localhost:6000">
+            </div>
+            <div class="input-group">
+                <label for="token">JWT Token (Auto-filled after login/register):</label>
+                <input type="text" id="token" placeholder="Your JWT token will appear here">
+            </div>
+        </div>
+
+        <div class="endpoints">
+            <!-- Register -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                    <span class="endpoint-title">Register User</span>
+                    <span class="method post">POST</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Endpoint:</strong> /auth/register</p>
+                    <div class="form-row">
+                        <label>GitHub Personal Token:</label>
+                        <input type="password" id="register-ghp" placeholder="ghp_xxxxxxxxxxxx">
+                    </div>
+                    <button onclick="register()">Register</button>
+                    <div id="register-response"></div>
+                </div>
+            </div>
+
+            <!-- Login -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                    <span class="endpoint-title">Login User</span>
+                    <span class="method post">POST</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Endpoint:</strong> /auth/login</p>
+                    <div class="form-row">
+                        <label>GitHub Personal Token:</label>
+                        <input type="password" id="login-ghp" placeholder="ghp_xxxxxxxxxxxx">
+                    </div>
+                    <button onclick="login()">Login</button>
+                    <div id="login-response"></div>
+                </div>
+            </div>
+
+            <!-- Get Current User -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                    <span class="endpoint-title">Get Current User</span>
+                    <span class="method get">GET</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Endpoint:</strong> /me</p>
+                    <button onclick="getCurrentUser()">Get Me</button>
+                    <div id="me-response"></div>
+                </div>
+            </div>
+
+            <!-- Get GitHub Info -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                    <span class="endpoint-title">Get GitHub Info</span>
+                    <span class="method post">POST</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Endpoint:</strong> /api/github-info</p>
+                    <div class="form-row">
+                        <label>GitHub Personal Token:</label>
+                        <input type="password" id="github-info-ghp" placeholder="ghp_xxxxxxxxxxxx">
+                    </div>
+                    <button onclick="getGithubInfo()">Get GitHub Info</button>
+                    <div id="github-info-response"></div>
+                </div>
+            </div>
+
+            <!-- Create Project -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                    <span class="endpoint-title">Create Project</span>
+                    <span class="method post">POST</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Endpoint:</strong> /projects</p>
+                    <div class="form-row">
+                        <label>Project Name:</label>
+                        <input type="text" id="create-name" placeholder="my-project">
+                    </div>
+                    <div class="form-row">
+                        <label>Description (optional):</label>
+                        <input type="text" id="create-description" placeholder="Project description">
+                    </div>
+                    <button onclick="createProject()">Create Project</button>
+                    <div id="create-project-response"></div>
+                </div>
+            </div>
+
+            <!-- Get All Projects -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                    <span class="endpoint-title">Get All Projects</span>
+                    <span class="method get">GET</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Endpoint:</strong> /projects</p>
+                    <button onclick="getAllProjects()">Get Projects</button>
+                    <div id="get-projects-response"></div>
+                </div>
+            </div>
+
+            <!-- Get Project by ID -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                    <span class="endpoint-title">Get Project by ID</span>
+                    <span class="method get">GET</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Endpoint:</strong> /projects/:id</p>
+                    <div class="form-row">
+                        <label>Project ID:</label>
+                        <input type="text" id="get-project-id" placeholder="1">
+                    </div>
+                    <button onclick="getProject()">Get Project</button>
+                    <div id="get-project-response"></div>
+                </div>
+            </div>
+
+            <!-- Update Project -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                    <span class="endpoint-title">Update Project</span>
+                    <span class="method put">PUT</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Endpoint:</strong> /projects/:id</p>
+                    <div class="form-row">
+                        <label>Project ID:</label>
+                        <input type="text" id="update-id" placeholder="1">
+                    </div>
+                    <div class="form-row">
+                        <label>New Name:</label>
+                        <input type="text" id="update-name" placeholder="new-project-name">
+                    </div>
+                    <div class="form-row">
+                        <label>New Description:</label>
+                        <input type="text" id="update-description" placeholder="New description">
+                    </div>
+                    <button onclick="updateProject()">Update Project</button>
+                    <div id="update-project-response"></div>
+                </div>
+            </div>
+
+            <!-- Upload File -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                    <span class="endpoint-title">Upload File to Project</span>
+                    <span class="method post">POST</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Endpoint:</strong> /projects/:id/upload</p>
+                    <div class="form-row">
+                        <label>Project ID:</label>
+                        <input type="text" id="upload-project-id" placeholder="1">
+                    </div>
+                    <div class="form-row">
+                        <label>File Path in Repository:</label>
+                        <input type="text" id="upload-path" placeholder="src/index.js">
+                    </div>
+                    <div class="form-row">
+                        <label>Select File:</label>
+                        <input type="file" id="upload-file">
+                    </div>
+                    <button onclick="uploadFile()">Upload File</button>
+                    <div id="upload-response"></div>
+                </div>
+            </div>
+
+            <!-- Delete Project -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                    <span class="endpoint-title">Delete Project</span>
+                    <span class="method delete">DELETE</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Endpoint:</strong> /projects/:id</p>
+                    <div class="form-row">
+                        <label>Project ID:</label>
+                        <input type="text" id="delete-id" placeholder="1">
+                    </div>
+                    <div class="form-row">
+                        <label>
+                            <input type="checkbox" id="delete-from-github">
+                            Also delete from GitHub
+                        </label>
+                    </div>
+                    <button onclick="deleteProject()">Delete Project</button>
+                    <div id="delete-project-response"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const baseUrlInput = document.getElementById('baseUrl');
+        const tokenInput = document.getElementById('token');
+
+        function toggleEndpoint(header) {
+            const body = header.nextElementSibling;
+            body.classList.toggle('active');
+        }
+
+        function getBaseUrl() {
+            return baseUrlInput.value.trim();
+        }
+
+        function getToken() {
+            return tokenInput.value.trim();
+        }
+
+        function setToken(token) {
+            tokenInput.value = token;
+        }
+
+        function showResponse(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            const cssClass = isError ? 'error' : 'success';
+            element.innerHTML = `
+                <div class="response ${cssClass}">
+                    <h4>${isError ? '❌ Error' : '✅ Success'}</h4>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+        }
+
+        async function register() {
+            const ghp = document.getElementById('register-ghp').value;
+            try {
+                const response = await fetch(`${getBaseUrl()}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ghp })
+                });
+                const data = await response.json();
+                if (response.ok && data.token) {
+                    setToken(data.token);
+                }
+                showResponse('register-response', data, !response.ok);
+            } catch (error) {
+                showResponse('register-response', { error: error.message }, true);
+            }
+        }
+
+        async function login() {
+            const ghp = document.getElementById('login-ghp').value;
+            try {
+                const response = await fetch(`${getBaseUrl()}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ghp })
+                });
+                const data = await response.json();
+                if (response.ok && data.token) {
+                    setToken(data.token);
+                }
+                showResponse('login-response', data, !response.ok);
+            } catch (error) {
+                showResponse('login-response', { error: error.message }, true);
+            }
+        }
+
+        async function getCurrentUser() {
+            try {
+                const response = await fetch(`${getBaseUrl()}/me`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const data = await response.json();
+                showResponse('me-response', data, !response.ok);
+            } catch (error) {
+                showResponse('me-response', { error: error.message }, true);
+            }
+        }
+
+        async function getGithubInfo() {
+            const ghp = document.getElementById('github-info-ghp').value;
+            try {
+                const response = await fetch(`${getBaseUrl()}/api/github-info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ghp })
+                });
+                const data = await response.json();
+                showResponse('github-info-response', data, !response.ok);
+            } catch (error) {
+                showResponse('github-info-response', { error: error.message }, true);
+            }
+        }
+
+        async function createProject() {
+            const name = document.getElementById('create-name').value;
+            const description = document.getElementById('create-description').value;
+            try {
+                const response = await fetch(`${getBaseUrl()}/projects`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getToken()}`
+                    },
+                    body: JSON.stringify({ name, description })
+                });
+                const data = await response.json();
+                showResponse('create-project-response', data, !response.ok);
+            } catch (error) {
+                showResponse('create-project-response', { error: error.message }, true);
+            }
+        }
+
+        async function getAllProjects() {
+            try {
+                const response = await fetch(`${getBaseUrl()}/projects`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const data = await response.json();
+                showResponse('get-projects-response', data, !response.ok);
+            } catch (error) {
+                showResponse('get-projects-response', { error: error.message }, true);
+            }
+        }
+
+        async function getProject() {
+            const id = document.getElementById('get-project-id').value;
+            try {
+                const response = await fetch(`${getBaseUrl()}/projects/${id}`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const data = await response.json();
+                showResponse('get-project-response', data, !response.ok);
+            } catch (error) {
+                showResponse('get-project-response', { error: error.message }, true);
+            }
+        }
+
+        async function updateProject() {
+            const id = document.getElementById('update-id').value;
+            const name = document.getElementById('update-name').value;
+            const description = document.getElementById('update-description').value;
+            try {
+                const response = await fetch(`${getBaseUrl()}/projects/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getToken()}`
+                    },
+                    body: JSON.stringify({ name, description })
+                });
+                const data = await response.json();
+                showResponse('update-project-response', data, !response.ok);
+            } catch (error) {
+                showResponse('update-project-response', { error: error.message }, true);
+            }
+        }
+
+        async function uploadFile() {
+            const projectId = document.getElementById('upload-project-id').value;
+            const path = document.getElementById('upload-path').value;
+            const fileInput = document.getElementById('upload-file');
+            
+            if (!fileInput.files[0]) {
+                showResponse('upload-response', { error: 'Please select a file' }, true);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('path', path);
+
+            try {
+                const response = await fetch(`${getBaseUrl()}/projects/${projectId}/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`
+                    },
+                    body: formData
+                });
+                const data = await response.json();
+                showResponse('upload-response', data, !response.ok);
+            } catch (error) {
+                showResponse('upload-response', { error: error.message }, true);
+            }
+        }
+
+        async function deleteProject() {
+            const id = document.getElementById('delete-id').value;
+            const deleteFromGithub = document.getElementById('delete-from-github').checked;
+            try {
+                const response = await fetch(`${getBaseUrl()}/projects/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getToken()}`
+                    },
+                    body: JSON.stringify({ deleteFromGithub })
+                });
+                const data = await response.json();
+                showResponse('delete-project-response', data, !response.ok);
+            } catch (error) {
+                showResponse('delete-project-response', { error: error.message }, true);
+            }
+        }
+    </script>
+</body>
+</html>

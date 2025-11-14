@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/auth';
 import githubRoutes from './routes/github';
@@ -17,14 +18,30 @@ const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 6000;
 
+// CORS Configuration
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || '*',
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static files (playground)
+app.use('/public', express.static(path.join(__dirname, '../public')));
+
 // Routes
 app.get('/', (req: Request, res: Response) => {
-  res.json({ message: 'Welcome to Express + TypeScript + Prisma API with JWT Auth' });
+  res.json({ 
+    message: 'Welcome to Express + TypeScript + Prisma API with JWT Auth',
+    playground: `${req.protocol}://${req.get('host')}/public/playground.html`
+  });
+});
+
+// Playground shortcut
+app.get('/playground', (req: Request, res: Response) => {
+  res.redirect('/public/playground.html');
 });
 
 // Auth routes
