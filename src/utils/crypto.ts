@@ -10,3 +10,13 @@ export function decryptToken(encryptedToken: string): string {
   const bytes = CryptoJS.AES.decrypt(encryptedToken, ENCRYPTION_KEY);
   return bytes.toString(CryptoJS.enc.Utf8);
 }
+
+// Generate a random short code
+export function generateShortCode(length: number = 6): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}

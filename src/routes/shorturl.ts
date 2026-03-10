@@ -1,19 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticate, AuthRequest } from '../middleware/auth';
+import { generateShortCode } from '../utils/crypto';
 
 const router = Router();
 const prisma = new PrismaClient();
-
-// Generate a random short code
-function generateShortCode(length: number = 6): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-}
 
 // Create short URL (authenticated)
 router.post('/shorten', authenticate, async (req: AuthRequest, res: Response) => {

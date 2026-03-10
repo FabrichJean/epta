@@ -4,6 +4,7 @@ import { Octokit } from '@octokit/rest';
 import multer from 'multer';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { getUserGithubToken } from '../utils/github.com';
+import { generateShortCode } from '../utils/crypto';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -13,16 +14,6 @@ const upload = multer({
   storage: multer.memoryStorage(),
   // limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
-
-// Helper function to generate short code
-function generateShortCode(length: number = 6): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-}
 
 // Create project - creates a private GitHub repository and saves to database
 router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
