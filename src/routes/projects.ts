@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { Octokit } from '@octokit/rest';
 import multer from 'multer';
 import { authenticate, AuthRequest } from '../middleware/auth';
-import { decryptToken } from '../utils/crypto';
+import { getUserGithubToken } from '../utils/github.com';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -11,7 +11,7 @@ const prisma = new PrismaClient();
 // Configure multer for memory storage
 const upload = multer({ 
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+  // limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
 // Helper function to generate short code
@@ -22,26 +22,6 @@ function generateShortCode(length: number = 6): string {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return result;
-}
-
-// Helper function to get user's decrypted GitHub token
-async function getUserGithubToken(userId: number): Promise<string | null> {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { githubToken: true }
-  });
-  
-  if (!user?.githubToken) {
-    return null;
-  }
-  
-  try {
-
-    return decryptToken(user.githubToken);
-  } catch (error) {
-    console.error('Error decrypting token:', error);
-    return null;
-  }
 }
 
 // Create project - creates a private GitHub repository and saves to database
@@ -212,6 +192,19 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
       // If it's a single file, return file details
       if (!Array.isArray(data)) {
         const fileData: any = data;
+        
+        // Generate permanent public URL for this file
+        const shortCode = generateShortCode();
+        const publicUrl = `${req.protocol}://${req.get('host')}/f/${shortCode}`;
+        
+        await prisma.shortUrl.create({
+          data: {
+            shortCode,
+            originalUrl: fileData.download_url,
+            userId
+          }
+        });
+        
         return res.json({
           type: 'file',
           name: fileData.name,
@@ -220,20 +213,40 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
           sha: fileData.sha,
           url: fileData.html_url,
           downloadUrl: fileData.download_url,
+          publicUrl: publicUrl, // Permanent public URL
           content: fileData.content, // Base64 encoded content
           encoding: fileData.encoding
         });
       }
 
-      // If it's a directory, return list of contents
-      const contents = data.map((item: any) => ({
-        type: item.type, // 'file' or 'dir'
-        name: item.name,
-        path: item.path,
-        size: item.size,
-        sha: item.sha,
-        url: item.html_url,
-        downloadUrl: item.download_url
+      // If it's a directory, return list of contents with publicUrl for files
+      const contents = await Promise.all(data.map(async (item: any) => {
+        let publicUrl = null;
+        
+        // Generate publicUrl only for files, not directories
+        if (item.type === 'file' && item.download_url) {
+          const shortCode = generateShortCode();
+          publicUrl = `${req.protocol}://${req.get('host')}/f/${shortCode}`;
+          
+          await prisma.shortUrl.create({
+            data: {
+              shortCode,
+              originalUrl: item.download_url,
+              userId
+            }
+          });
+        }
+        
+        return {
+          type: item.type, // 'file' or 'dir'
+          name: item.name,
+          path: item.path,
+          size: item.size,
+          sha: item.sha,
+          url: item.html_url,
+          downloadUrl: item.download_url,
+          publicUrl: publicUrl // Permanent public URL for files only
+        };
       }));
 
       res.json({

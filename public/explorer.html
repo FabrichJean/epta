@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPTA - Project Explorer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .auth-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .auth-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        .project-selector {
+            background: #fff;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .breadcrumb {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .breadcrumb-item {
+            color: #667eea;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .breadcrumb-item:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb-separator {
+            color: #999;
+        }
+
+        .explorer-container {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            min-height: 400px;
+        }
+
+        .toolbar {
+            background: #f8f9fa;
+            padding: 15px;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .file-list {
+            padding: 15px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .file-item:hover {
+            background: #f8f9fa;
+        }
+
+        .file-icon {
+            width: 32px;
+            height: 32px;
+            margin-right: 12px;
+            font-size: 24px;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .file-meta {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .file-actions button {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .upload-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .upload-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 40px;
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .file-input-label:hover {
+            background: #f0f4ff;
+            border-color: #764ba2;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .selected-file {
+            background: #e7f3ff;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        code {
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .flex {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .flex-1 {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📁 EPTA Project Explorer</h1>
+            <p>Explore and manage your GitHub project files</p>
+        </div>
+
+        <div class="content">
+            <!-- Global Alerts -->
+            <div id="globalAlert"></div>
+
+            <!-- Authentication Section -->
+            <div class="auth-section">
+                <h2>🔑 Authentication</h2>
+                <div class="input-group">
+                    <label for="token">Bearer Token:</label>
+                    <input type="password" id="token" placeholder="Enter your JWT token">
+                </div>
+                <button class="btn" onclick="loadProjects()">Load Projects</button>
+            </div>
+
+            <!-- Project Selector -->
+            <div class="project-selector hidden" id="projectSelector">
+                <div class="flex" style="justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2 style="margin: 0;">Select Project</h2>
+                    <button class="btn btn-small" onclick="showCreateProjectModal()">➕ New Project</button>
+                </div>
+                <div class="input-group">
+                    <label for="projectSelect">Project:</label>
+                    <select id="projectSelect" onchange="loadProjectContents()">
+                        <option value="">-- Select a project --</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Breadcrumb Navigation -->
+            <div class="breadcrumb hidden" id="breadcrumb"></div>
+
+            <!-- Explorer -->
+            <div class="explorer-container hidden" id="explorer">
+                <div class="toolbar">
+                    <button class="btn btn-small" onclick="goBack()">⬅️ Back</button>
+                    <button class="btn btn-small" onclick="loadProjectContents()">🔄 Refresh</button>
+                    <button class="btn btn-small" onclick="toggleUploadSection()">📤 Upload File</button>
+                    <button class="btn btn-small" onclick="showNewJsonModal()">🧾 New JSON</button>
+                </div>
+                <div class="file-list" id="fileList">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Upload Section -->
+            <div class="upload-section hidden" id="uploadSection">
+                <h3>📤 Upload File</h3>
+                <div id="uploadAlert"></div>
+                
+                <div class="input-group">
+                    <label for="uploadPath">Upload Path:</label>
+                    <input type="text" id="uploadPath" placeholder="e.g., images/photo.jpg or docs/readme.md" readonly>
+                </div>
+
+                <div class="file-input-wrapper">
+                    <label for="fileInput" class="file-input-label">
+                        <div style="font-size: 48px; margin-bottom: 10px;">📁</div>
+                        <div><strong>Click to select a file</strong></div>
+                        <div style="font-size: 12px; color: #999; margin-top: 5px;">Max file size: 10MB</div>
+                    </label>
+                    <input type="file" id="fileInput" class="file-input" onchange="handleFileSelect(event)">
+                </div>
+
+                <div class="selected-file" id="selectedFile"></div>
+
+                <div class="flex">
+                    <button class="btn flex-1" onclick="uploadFile()">Upload</button>
+                    <button class="btn btn-secondary" onclick="toggleUploadSection()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- File Preview Modal -->
+    <div class="modal" id="fileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">File Preview</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Create Project Modal -->
+    <div class="modal" id="createProjectModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>➕ Create New Project</h2>
+                <button class="modal-close" onclick="closeCreateProjectModal()">×</button>
+            </div>
+            <div id="createProjectAlert"></div>
+            <div class="input-group">
+                <label for="newProjectName">Project Name: *</label>
+                <input type="text" id="newProjectName" placeholder="my-awesome-project" required>
+                <small style="color: #666; font-size: 12px;">Will create a GitHub repository with this name</small>
+            </div>
+            <div class="input-group">
+                <label for="newProjectDescription">Description:</label>
+                <input type="text" id="newProjectDescription" placeholder="A brief description of your project">
+            </div>
+            <div class="flex">
+                <button class="btn flex-1" onclick="createProject()">Create Project</button>
+                <button class="btn btn-secondary" onclick="closeCreateProjectModal()">Cancel</button>
+            </div>
+        </div>
+    
+            <!-- New JSON Modal -->
+            <div class="modal" id="newJsonModal">
+                <div class="modal-content" style="max-width: 900px;">
+                    <div class="modal-header">
+                        <h2>🧾 Create JSON from Table</h2>
+                        <button class="modal-close" onclick="closeNewJsonModal()">×</button>
+                    </div>
+                    <div id="newJsonAlert"></div>
+
+                    <div class="flex" style="margin-bottom: 12px; gap: 12px;">
+                        <div style="flex: 1;">
+                            <label for="jsonFileName">Filename:</label>
+                            <input type="text" id="jsonFileName" value="data.json" placeholder="data.json">
+                        </div>
+                        <div style="flex: 2;">
+                            <label for="jsonUploadPath">Upload Path (inside repo):</label>
+                            <input type="text" id="jsonUploadPath" placeholder="folder/data.json (optional)" />
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:12px;">
+                        <label for="jsonImportFile">Import JSON file:</label>
+                        <input type="file" id="jsonImportFile" accept=".json,application/json" onchange="handleImportJson(event)" />
+                        <div style="margin-top:6px; color:#666; font-size:12px;">Importera un fichier JSON (tableau d'objets ou objet unique). Les clés deviendront les colonnes.</div>
+                    </div>
+
+                    <div style="margin-bottom: 12px;">
+                        <strong>Columns</strong>
+                        <div id="jsonColumns" style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;"></div>
+                        <div style="margin-top:8px;">
+                            <button class="btn btn-small" onclick="addColumn()">＋ Add column</button>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:12px;">
+                        <strong>Rows</strong>
+                        <div id="jsonRows" style="margin-top:8px;"></div>
+                        <div style="margin-top:8px;">
+                            <button class="btn btn-small" onclick="addRow()">＋ Add row</button>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:16px; display:flex; gap:12px; align-items:flex-start;">
+                        <div style="flex:1;">
+                            <button class="btn flex-1" onclick="previewJson()">Preview JSON</button>
+                            <button class="btn flex-1" style="margin-left:8px;" onclick="uploadJson()">Upload JSON</button>
+                        </div>
+                        <div style="flex:1;">
+                            <small style="color:#666">Preview will show the generated JSON array of objects where column names are keys.</small>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:16px;">
+                        <h3>Preview</h3>
+                        <pre id="jsonPreview" style="max-height:300px; overflow:auto; background:#fafafa; padding:10px;"></pre>
+                    </div>
+                </div>
+            </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:4000';
+        let currentToken = '';
+        let currentProjectId = null;
+        let currentPath = '';
+        let currentProject = null;
+
+        function getToken() {
+            return document.getElementById('token').value || currentToken;
+        }
+
+        function showAlert(message, type = 'info', containerId = 'globalAlert') {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        async function loadProjects() {
+            const token = getToken().trim();
+            if (!token) {
+                showAlert('Please enter your token', 'error');
+                return;
+            }
+
+            // Validate token contains only ASCII characters
+            if (!/^[\x00-\x7F]*$/.test(token)) {
+                showAlert('❌ Token contains invalid characters. Please use only ASCII characters.', 'error');
+                return;
+            }
+
+            currentToken = token;
+
+            try {
+                showAlert('Loading projects...', 'info');
+                
+                const response = await fetch(`${API_BASE}/projects`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.message || `HTTP ${response.status}: Failed to load projects`);
+                }
+
+                const data = await response.json();
+                console.log('Projects response:', data);
+                
+                // The API returns { projects: [...] }
+                const projects = data.projects || data;
+                
+                if (!Array.isArray(projects)) {
+                    throw new Error('Invalid response format: ' + JSON.stringify(data));
+                }
+                
+                const select = document.getElementById('projectSelect');
+                select.innerHTML = '<option value="">-- Select a project --</option>';
+                
+                projects.forEach(project => {
+                    const option = document.createElement('option');
+                    option.value = project.id;
+                    option.textContent = `${project.name} (${project.visibility})`;
+                    option.dataset.project = JSON.stringify(project);
+                    select.appendChild(option);
+                });
+
+                document.getElementById('projectSelector').classList.remove('hidden');
+                showAlert(`✅ ${projects.length} project(s) loaded successfully!`, 'success');
+            } catch (error) {
+                console.error('Load projects error:', error);
+                showAlert(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadProjectContents(path = '') {
+            const select = document.getElementById('projectSelect');
+            const projectId = select.value;
+            
+            if (!projectId) {
+                alert('Please select a project');
+                return;
+            }
+
+            currentProjectId = projectId;
+            currentPath = path;
+            
+            const selectedOption = select.options[select.selectedIndex];
+            currentProject = JSON.parse(selectedOption.dataset.project);
+
+            const token = getToken();
+            document.getElementById('fileList').innerHTML = '<div class="loading">Loading...</div>';
+            document.getElementById('explorer').classList.remove('hidden');
+            
+            updateBreadcrumb();
+
+            try {
+                const response = await fetch(`${API_BASE}/projects/${projectId}/contents/${path}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load contents');
+                }
+
+                const data = await response.json();
+                
+                if (data.type === 'dir') {
+                    displayDirectory(data.contents);
+                } else {
+                    displayFile(data);
+                }
+            } catch (error) {
+                document.getElementById('fileList').innerHTML = 
+                    `<div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <div>Error: ${error.message}</div>
+                    </div>`;
+            }
+        }
+
+        function displayDirectory(contents) {
+            const fileList = document.getElementById('fileList');
+            
+            if (!contents || contents.length === 0) {
+                fileList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📂</div>
+                        <div>This directory is empty</div>
+                    </div>`;
+                return;
+            }
+
+            fileList.innerHTML = '';
+            
+            // Sort: directories first, then files
+            contents.sort((a, b) => {
+                if (a.type === b.type) return a.name.localeCompare(b.name);
+                return a.type === 'dir' ? -1 : 1;
+            });
+
+            contents.forEach(item => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                
+                const icon = item.type === 'dir' ? '📁' : '📄';
+                const size = item.size ? formatBytes(item.size) : '';
+                
+                fileItem.innerHTML = `
+                    <div class="file-icon">${icon}</div>
+                    <div class="file-info">
+                        <div class="file-name">${item.name}</div>
+                        <div class="file-meta">${item.type === 'dir' ? 'Directory' : size}</div>
+                    </div>
+                    <div class="file-actions">
+                        ${item.type === 'file' ? `
+                            <button class="btn btn-small" onclick='copyToClipboard("${item.publicUrl}", event)'>📋 Copy URL</button>
+                            <button class="btn btn-small" onclick='downloadFile("${item.publicUrl}", "${item.name}", event)'>⬇️ Download</button>
+                        ` : ''}
+                    </div>
+                `;
+
+                if (item.type === 'dir') {
+                    fileItem.onclick = () => loadProjectContents(item.path);
+                } else {
+                    fileItem.onclick = (e) => {
+                        if (!e.target.closest('.file-actions')) {
+                            previewFile(item);
+                        }
+                    };
+                }
+
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        function displayFile(file) {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = `
+                <div class="file-item">
+                    <div class="file-icon">📄</div>
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-meta">${formatBytes(file.size)}</div>
+                    </div>
+                    <div class="file-actions">
+                        <button class="btn btn-small" onclick='copyToClipboard("${file.publicUrl}")'>📋 Copy URL</button>
+                        <button class="btn btn-small" onclick='downloadFile("${file.publicUrl}", "${file.name}")'>⬇️ Download</button>
+                        <button class="btn btn-small" onclick='previewFile(${JSON.stringify(file)})'>👁️ Preview</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateBreadcrumb() {
+            const breadcrumb = document.getElementById('breadcrumb');
+            breadcrumb.classList.remove('hidden');
+            
+            const parts = currentPath ? currentPath.split('/') : [];
+            let html = `<span class="breadcrumb-item" onclick="loadProjectContents('')">🏠 ${currentProject.name}</span>`;
+            
+            let path = '';
+            parts.forEach((part, index) => {
+                path += (index > 0 ? '/' : '') + part;
+                const currentPathCopy = path;
+                html += `<span class="breadcrumb-separator">/</span>`;
+                html += `<span class="breadcrumb-item" onclick="loadProjectContents('${currentPathCopy}')">${part}</span>`;
+            });
+            
+            breadcrumb.innerHTML = html;
+            
+            // Update upload path
+            document.getElementById('uploadPath').value = currentPath;
+        }
+
+        function goBack() {
+            if (!currentPath) return;
+            
+            const parts = currentPath.split('/');
+            parts.pop();
+            const newPath = parts.join('/');
+            loadProjectContents(newPath);
+        }
+
+        function toggleUploadSection() {
+            const section = document.getElementById('uploadSection');
+            section.classList.toggle('hidden');
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const selectedFile = document.getElementById('selectedFile');
+            selectedFile.innerHTML = `
+                <strong>Selected:</strong> ${file.name} (${formatBytes(file.size)})
+            `;
+            selectedFile.style.display = 'block';
+        }
+
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showAlert('Please select a file', 'error', 'uploadAlert');
+                return;
+            }
+
+            if (!currentProjectId) {
+                showAlert('Please select a project first', 'error', 'uploadAlert');
+                return;
+            }
+
+            const fileName = file.name;
+            const uploadPath = currentPath ? `${currentPath}/${fileName}` : fileName;
+
+            const formData = new FormData();
+            formData.append('path', uploadPath);
+            formData.append('file', file);
+
+            try {
+                showAlert('Uploading...', 'info', 'uploadAlert');
+                
+                const response = await fetch(`${API_BASE}/projects/${currentProjectId}/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Upload failed');
+                }
+
+                const result = await response.json();
+                showAlert(`✅ File uploaded successfully! Public URL: ${result.publicUrl}`, 'success', 'uploadAlert');
+                
+                // Reset form
+                fileInput.value = '';
+                document.getElementById('selectedFile').style.display = 'none';
+                
+                // Refresh the file list
+                setTimeout(() => {
+                    loadProjectContents(currentPath);
+                    toggleUploadSection();
+                }, 1500);
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'error', 'uploadAlert');
+            }
+        }
+
+        function previewFile(file) {
+            const modal = document.getElementById('fileModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalTitle.textContent = file.name;
+            
+            if (file.content && file.encoding === 'base64') {
+                try {
+                    const content = atob(file.content);
+                    const isText = isTextFile(file.name);
+                    
+                    if (isText) {
+                        modalBody.innerHTML = `<pre><code>${escapeHtml(content)}</code></pre>`;
+                    } else {
+                        modalBody.innerHTML = `
+                            <div class="alert alert-info">
+                                Binary file preview not available. 
+                                <a href="${file.publicUrl}" target="_blank">Download file</a>
+                            </div>
+                            <div><strong>Size:</strong> ${formatBytes(file.size)}</div>
+                            <div><strong>Public URL:</strong> <a href="${file.publicUrl}" target="_blank">${file.publicUrl}</a></div>
+                        `;
+                    }
+                } catch (error) {
+                    modalBody.innerHTML = `<div class="alert alert-error">Failed to decode file content</div>`;
+                }
+            } else {
+                modalBody.innerHTML = `
+                    <div><strong>Size:</strong> ${formatBytes(file.size)}</div>
+                    <div><strong>SHA:</strong> ${file.sha}</div>
+                    <div><strong>Public URL:</strong> <a href="${file.publicUrl}" target="_blank">${file.publicUrl}</a></div>
+                    <div style="margin-top: 15px;">
+                        <button class="btn" onclick='downloadFile("${file.publicUrl}", "${file.name}")'>⬇️ Download</button>
+                    </div>
+                `;
+            }
+            
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('fileModal').classList.remove('active');
+        }
+
+        async function downloadFile(url, filename, event) {
+            if (event) event.stopPropagation();
+            
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(downloadUrl);
+                showAlert('Download started!', 'success');
+            } catch (error) {
+                showAlert(`Download failed: ${error.message}`, 'error');
+            }
+        }
+
+        function copyToClipboard(text, event) {
+            if (event) event.stopPropagation();
+            
+            navigator.clipboard.writeText(text).then(() => {
+                showAlert('URL copied to clipboard!', 'success');
+            }).catch(() => {
+                showAlert('Failed to copy URL', 'error');
+            });
+        }
+
+        function formatBytes(bytes) {
+            if (!bytes) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function isTextFile(filename) {
+            const textExtensions = [
+                'txt', 'md', 'json', 'js', 'ts', 'jsx', 'tsx', 'css', 'html', 'xml',
+                'yml', 'yaml', 'py', 'java', 'c', 'cpp', 'h', 'cs', 'php', 'rb',
+                'go', 'rs', 'swift', 'kt', 'sh', 'bash', 'sql', 'r', 'scala'
+            ];
+            const ext = filename.split('.').pop().toLowerCase();
+            return textExtensions.includes(ext);
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('fileModal').addEventListener('click', (e) => {
+            if (e.target.id === 'fileModal') {
+                closeModal();
+            }
+        });
+
+        document.getElementById('createProjectModal').addEventListener('click', (e) => {
+            if (e.target.id === 'createProjectModal') {
+                closeCreateProjectModal();
+            }
+        });
+
+        document.getElementById('newJsonModal').addEventListener('click', (e) => {
+            if (e.target.id === 'newJsonModal') {
+                closeNewJsonModal();
+            }
+        });
+
+        // Create Project Modal Functions
+        function showCreateProjectModal() {
+            document.getElementById('createProjectModal').classList.add('active');
+            document.getElementById('newProjectName').value = '';
+            document.getElementById('newProjectDescription').value = '';
+            document.getElementById('createProjectAlert').innerHTML = '';
+        }
+
+        function closeCreateProjectModal() {
+            document.getElementById('createProjectModal').classList.remove('active');
+        }
+
+        async function createProject() {
+            const name = document.getElementById('newProjectName').value.trim();
+            const description = document.getElementById('newProjectDescription').value.trim();
+            
+            if (!name) {
+                showAlert('Please enter a project name', 'error', 'createProjectAlert');
+                return;
+            }
+
+            // Validate project name (GitHub repository name rules)
+            if (!/^[a-zA-Z0-9_.-]+$/.test(name)) {
+                showAlert('Project name can only contain letters, numbers, hyphens, underscores, and dots', 'error', 'createProjectAlert');
+                return;
+            }
+
+            const token = getToken();
+            if (!token) {
+                showAlert('Please authenticate first', 'error', 'createProjectAlert');
+                return;
+            }
+
+            try {
+                showAlert('Creating project...', 'info', 'createProjectAlert');
+
+                const response = await fetch(`${API_BASE}/projects`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        description: description || undefined
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.error || error.message || `HTTP ${response.status}: Failed to create project`);
+                }
+
+                const data = await response.json();
+                
+                showAlert(`✅ Project "${name}" created successfully!`, 'success', 'createProjectAlert');
+                
+                // Wait a moment, then reload projects and close modal
+                setTimeout(() => {
+                    closeCreateProjectModal();
+                    loadProjects();
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Create project error:', error);
+                showAlert(`❌ Error: ${error.message}`, 'error', 'createProjectAlert');
+            }
+        }
+
+        // New JSON editor logic
+        let jsonColumns = [];
+        let jsonRows = [];
+
+        function showNewJsonModal() {
+            // Ensure project selected
+            if (!currentProjectId) {
+                showAlert('Please select a project first', 'error', 'createProjectAlert');
+                return;
+            }
+
+            document.getElementById('newJsonModal').classList.add('active');
+            document.getElementById('jsonPreview').textContent = '';
+            // default single column and single row
+            jsonColumns = ['key'];
+            jsonRows = [ [''] ];
+            document.getElementById('jsonFileName').value = 'data.json';
+            document.getElementById('jsonUploadPath').value = '';
+            renderColumns();
+            renderRows();
+            document.getElementById('newJsonAlert').innerHTML = '';
+        }
+
+        // Import JSON file and populate table
+        function handleImportJson(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const text = reader.result;
+                    const parsed = JSON.parse(text);
+                    let arr = [];
+                    if (Array.isArray(parsed)) {
+                        arr = parsed;
+                    } else if (parsed && typeof parsed === 'object') {
+                        arr = [parsed];
+                    } else {
+                        throw new Error('Unsupported JSON structure');
+                    }
+
+                    // Compute columns as union of keys
+                    const colsSet = new Set();
+                    arr.forEach(obj => {
+                        if (obj && typeof obj === 'object') {
+                            Object.keys(obj).forEach(k => colsSet.add(k));
+                        }
+                    });
+                    const cols = Array.from(colsSet);
+                    if (cols.length === 0) {
+                        showAlert('Imported JSON contains no object keys', 'error', 'newJsonAlert');
+                        return;
+                    }
+
+                    jsonColumns = cols.map(c => c.toString());
+                    jsonRows = arr.map(obj => cols.map(k => {
+                        const v = obj[k];
+                        return v === null || v === undefined ? '' : String(v);
+                    }));
+
+                    renderColumns();
+                    renderRows();
+                    previewJson();
+                    showAlert('JSON imported into the table', 'success', 'newJsonAlert');
+                } catch (err) {
+                    console.error('Import JSON error', err);
+                    showAlert('Failed to parse JSON file', 'error', 'newJsonAlert');
+                }
+            };
+            reader.onerror = () => {
+                showAlert('Failed to read file', 'error', 'newJsonAlert');
+            };
+            reader.readAsText(file);
+            // reset input so same file can be re-selected if needed
+            event.target.value = '';
+        }
+
+        function closeNewJsonModal() {
+            document.getElementById('newJsonModal').classList.remove('active');
+        }
+
+        function renderColumns() {
+            const container = document.getElementById('jsonColumns');
+            container.innerHTML = '';
+            jsonColumns.forEach((col, i) => {
+                const wrapper = document.createElement('div');
+                wrapper.style.display = 'flex';
+                wrapper.style.gap = '6px';
+                wrapper.style.alignItems = 'center';
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = col;
+                input.placeholder = `column_${i+1}`;
+                input.oninput = (e) => {
+                    jsonColumns[i] = e.target.value;
+                };
+                input.style.padding = '6px';
+                input.style.border = '1px solid #ddd';
+                input.style.borderRadius = '4px';
+
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'btn btn-small';
+                removeBtn.textContent = '−';
+                removeBtn.onclick = () => {
+                    removeColumn(i);
+                };
+
+                wrapper.appendChild(input);
+                wrapper.appendChild(removeBtn);
+                container.appendChild(wrapper);
+            });
+        }
+
+        function renderRows() {
+            const container = document.getElementById('jsonRows');
+            container.innerHTML = '';
+            jsonRows.forEach((row, rIdx) => {
+                const rowDiv = document.createElement('div');
+                rowDiv.style.display = 'flex';
+                rowDiv.style.gap = '8px';
+                rowDiv.style.marginBottom = '6px';
+
+                jsonColumns.forEach((col, cIdx) => {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = row[cIdx] || '';
+                    input.placeholder = col || `col${cIdx+1}`;
+                    input.oninput = (e) => {
+                        jsonRows[rIdx][cIdx] = e.target.value;
+                    };
+                    input.style.flex = '1';
+                    input.style.padding = '6px';
+                    input.style.border = '1px solid #ddd';
+                    input.style.borderRadius = '4px';
+                    rowDiv.appendChild(input);
+                });
+
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'btn btn-small';
+                removeBtn.textContent = 'Remove row';
+                removeBtn.onclick = () => {
+                    removeRow(rIdx);
+                };
+
+                rowDiv.appendChild(removeBtn);
+                container.appendChild(rowDiv);
+            });
+        }
+
+        function addColumn() {
+            const newCol = `col${jsonColumns.length + 1}`;
+            jsonColumns.push(newCol);
+            // add empty cell for each existing row
+            jsonRows = jsonRows.map(row => { row.push(''); return row; });
+            renderColumns();
+            renderRows();
+        }
+
+        function removeColumn(index) {
+            jsonColumns.splice(index, 1);
+            jsonRows = jsonRows.map(row => { row.splice(index, 1); return row; });
+            renderColumns();
+            renderRows();
+        }
+
+        function addRow() {
+            const newRow = jsonColumns.map(() => '');
+            jsonRows.push(newRow);
+            renderRows();
+        }
+
+        function removeRow(index) {
+            jsonRows.splice(index, 1);
+            renderRows();
+        }
+
+        function generateJsonFromTable() {
+            // Columns become keys; rows => objects
+            const keys = jsonColumns.map(k => (k || '').trim()).map((k, idx) => k || `col${idx+1}`);
+            const arr = jsonRows.map(row => {
+                const obj = {};
+                keys.forEach((key, i) => {
+                    // try to parse numbers or booleans; fallback to string
+                    const val = row[i] === undefined ? '' : row[i];
+                    if (val === '') {
+                        obj[key] = null;
+                    } else if (/^\d+$/.test(val)) {
+                        obj[key] = parseInt(val, 10);
+                    } else if (/^\d+\.\d+$/.test(val)) {
+                        obj[key] = parseFloat(val);
+                    } else if (/^(true|false)$/i.test(val)) {
+                        obj[key] = /^true$/i.test(val);
+                    } else {
+                        obj[key] = val;
+                    }
+                });
+                return obj;
+            });
+            return arr;
+        }
+
+        function previewJson() {
+            const json = generateJsonFromTable();
+            const pretty = JSON.stringify(json, null, 2);
+            document.getElementById('jsonPreview').textContent = pretty;
+        }
+
+        async function uploadJson() {
+            // Validate
+            const fileName = (document.getElementById('jsonFileName').value || 'data.json').trim();
+            if (!fileName.toLowerCase().endsWith('.json')) {
+                showAlert('Filename must end with .json', 'error', 'newJsonAlert');
+                return;
+            }
+
+            if (!currentProjectId) {
+                showAlert('Please select a project first', 'error', 'newJsonAlert');
+                return;
+            }
+
+            const pathInput = (document.getElementById('jsonUploadPath').value || '').trim();
+            const uploadPath = pathInput ? (pathInput.endsWith('.json') ? pathInput : `${pathInput.replace(/\/+$/,'')}/${fileName}`) : fileName;
+
+            const json = generateJsonFromTable();
+            const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+            const file = new File([blob], fileName, { type: 'application/json' });
+
+            const formData = new FormData();
+            formData.append('path', uploadPath);
+            formData.append('file', file);
+
+            try {
+                showAlert('Uploading JSON...', 'info', 'newJsonAlert');
+
+                const response = await fetch(`${API_BASE}/projects/${currentProjectId}/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.error || error.message || `HTTP ${response.status}: Upload failed`);
+                }
+
+                const result = await response.json();
+                showAlert(`✅ JSON uploaded: ${result.file.publicUrl}`, 'success', 'newJsonAlert');
+                // close and refresh
+                setTimeout(() => {
+                    closeNewJsonModal();
+                    loadProjectContents(currentPath);
+                }, 1200);
+            } catch (err) {
+                console.error('Upload JSON error:', err);
+                showAlert(`❌ Error: ${err.message}`, 'error', 'newJsonAlert');
+            }
+        }
+    </script>
+</body>
+</html>

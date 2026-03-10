@@ -48,3 +48,16 @@ model ShortUrl {
     @@index([shortCode])
     @@index([userId])
 }
+
+model JsonTable {
+    id          Int      @id @default(autoincrement())
+    name        String   // Table name
+    description String?  @db.Text // Optional description
+    columns     Json     // Array of column definitions: [{ name: string, type: string }]
+    rows        Json     // Array of row data: [[value1, value2, ...], ...]
+    userId      Int      // Owner of the table
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    
+    @@index([userId])
+}

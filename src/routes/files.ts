@@ -1,29 +1,9 @@
-import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { Octokit } from '@octokit/rest';
-import { decryptToken } from '../utils/crypto';
+import { Router, Request, Response } from 'express';
+import { getUserGithubToken } from '../utils/github.com';
 
-const router = Router();
 const prisma = new PrismaClient();
-
-// Helper function to get user's decrypted GitHub token
-async function getUserGithubToken(userId: number): Promise<string | null> {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { githubToken: true }
-  });
-  
-  if (!user?.githubToken) {
-    return null;
-  }
-  
-  try {
-    return decryptToken(user.githubToken);
-  } catch (error) {
-    console.error('Error decrypting token:', error);
-    return null;
-  }
-}
+const router = Router();
 
 // Serve file by short code (public route)
 router.get('/:shortCode', async (req: Request, res: Response) => {
@@ -56,14 +36,14 @@ router.get('/:shortCode', async (req: Request, res: Response) => {
       const headers: Record<string, string> = {
         'User-Agent': 'EPTA-File-Server'
       };
-      
+
       // Add authentication if we have a token
       if (githubToken) {
         headers['Authorization'] = `token ${githubToken}`;
       }
 
       const response = await fetch(shortUrl.originalUrl, { headers });
-      
+
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
           return res.status(403).json({ 
@@ -76,15 +56,15 @@ router.get('/:shortCode', async (req: Request, res: Response) => {
 
       // Get the content type from GitHub response
       const contentType = response.headers.get('content-type') || 'application/octet-stream';
-      
+
       // Get file content as buffer
       const buffer = await response.arrayBuffer();
-      
+
       // Set appropriate headers
       res.setHeader('Content-Type', contentType);
       res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
       res.setHeader('Access-Control-Allow-Origin', '*'); // Allow CORS
-      
+
       // Extract filename from originalUrl if possible
       const urlParts = shortUrl.originalUrl.split('/');
       const filename = urlParts[urlParts.length - 1].split('?')[0]; // Remove query params
