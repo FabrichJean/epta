@@ -5,6 +5,7 @@ import multer from 'multer';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { getUserGithubToken } from '../utils/github.com';
 import { generateShortCode } from '../utils/crypto';
+import { extractProjectId } from '../utils/project';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -427,10 +428,10 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res: Response) => {
 });
 
 // Upload file to GitHub repository
-router.post('/:id/upload', authenticate, upload.single('file'), async (req: AuthRequest, res: Response) => {
+router.post('/:projectId/upload', authenticate, upload.single('file'), async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.userId!;
-    const projectId = parseInt(req.params.id);
+    const projectId = await extractProjectId(req);
     let { path } = req.body;
     const file = req.file;
 

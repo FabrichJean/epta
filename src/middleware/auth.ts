@@ -1,10 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { verifyKey } from '../utils/auth';
+import { User } from '@prisma/client';
 
 
 export interface AuthRequest extends Request {
   userId?: number;
+  user?: User & { [key: string]: any };
 }
 
 export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -16,8 +18,9 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
       const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
       req.userId = decoded.userId;
     }else if(apiKey){
-      const {id} = await verifyKey(apiKey as string);
-      req.userId = id;
+      const user = await verifyKey(apiKey as string);
+      req.userId = user.id;
+      req.user = {...user, isApi: true};
     }else{
       return res.status(401).json({ error: 'Authentication required' });
     }
