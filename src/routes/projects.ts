@@ -104,7 +104,7 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
     const userId = req.userId!;
 
     const projects = await prisma.project.findMany({
-      where: { userId },
+      // where: { userId },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -156,7 +156,6 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
     const project = await prisma.project.findFirst({
       where: { 
         id: projectId,
-        userId 
       },
       include: {
         user: {
@@ -165,6 +164,9 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
       }
     });
 
+    console.log(project);
+    
+
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
@@ -172,7 +174,7 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
     const octokit = new Octokit({ auth: ghp });
     const repoName = (project.metadata as any)?.fullName?.split('/')[1] || project.name;
     const owner = project.user.username;
-
+    
     try {
       // Get contents from GitHub
       const { data } = await octokit.rest.repos.getContent({
@@ -180,6 +182,9 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
         repo: repoName,
         path: path
       });
+
+      console.log('repo', {path, repoName});
+      
 
       // If it's a single file, return file details
       if (!Array.isArray(data)) {
@@ -432,8 +437,12 @@ router.post('/:projectId/upload', authenticate, upload.single('file'), async (re
   try {
     const userId = req.userId!;
     const projectId = await extractProjectId(req);
+
     let { path } = req.body;
     const file = req.file;
+
+    console.log(path, file);
+    
 
     if (!file) {
       return res.status(400).json({ error: 'File is required' });
@@ -466,7 +475,6 @@ router.post('/:projectId/upload', authenticate, upload.single('file'), async (re
     const project = await prisma.project.findFirst({
       where: { 
         id: projectId,
-        userId 
       },
       include: {
         user: {
@@ -488,6 +496,7 @@ router.post('/:projectId/upload', authenticate, upload.single('file'), async (re
 
     // Upload file to GitHub
     try {
+      console.log({owner, repoName, userId, ghp});
       
       const { data } = await octokit.rest.repos.createOrUpdateFileContents({
         owner,
@@ -534,6 +543,8 @@ router.post('/:projectId/upload', authenticate, upload.single('file'), async (re
         },
       });
     } catch (error: any) {
+      // console.log(error);
+      
       if (error.status === 401) {
         return res.status(401).json({ 
           error: 'GitHub authentication failed', 

@@ -3,10 +3,10 @@ const prisma = new PrismaClient();
 
 export async function verifyKey(request: string) {
   if (request === process.env.API_KEY) {
-    const apiEmail = process.env.SEED_USER_EMAIL;
+    const name = process.env.SEED_USER_NAME;
     const apiUser = await prisma.user.findUniqueOrThrow({
       where: {
-        email: apiEmail,
+        name
       },
     });
 

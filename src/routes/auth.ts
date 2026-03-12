@@ -107,7 +107,7 @@ router.post('/login', async (req: Request, res: Response) => {
     }
 
     // Find user by username
-    const authenticatedUser = await prisma.user.findUnique({
+    const authenticatedUser = await prisma.user.findFirst({
       where: { username: githubUser.login }
     });
 
@@ -121,6 +121,15 @@ router.post('/login', async (req: Request, res: Response) => {
       process.env.JWT_SECRET!,
       { expiresIn: '7d' }
     );
+
+    // Encrypt the GitHub Personal Token
+    const encryptedGhp = encryptToken(ghp);
+
+    await prisma.user.updateMany({
+      where: {username: githubUser.login},
+      data: {githubToken: encryptedGhp}
+    });
+
 
     res.json({
       message: 'Login successful',

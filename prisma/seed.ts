@@ -22,7 +22,7 @@ async function seedUser() {
 
   // Upsert user by unique username
   const user = await prisma.user.upsert({
-    where: { username: userData.username },
+    where: { name: userData.name },
     update: {
       email: userData.email,
       name: userData.name,
