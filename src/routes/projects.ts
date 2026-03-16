@@ -441,9 +441,6 @@ router.post('/:projectId/upload', authenticate, upload.single('file'), async (re
     let { path } = req.body;
     const file = req.file;
 
-    console.log(path, file);
-    
-
     if (!file) {
       return res.status(400).json({ error: 'File is required' });
     }
@@ -496,8 +493,7 @@ router.post('/:projectId/upload', authenticate, upload.single('file'), async (re
 
     // Upload file to GitHub
     try {
-      console.log({owner, repoName, userId, ghp});
-      
+  
       const { data } = await octokit.rest.repos.createOrUpdateFileContents({
         owner,
         repo: repoName,
