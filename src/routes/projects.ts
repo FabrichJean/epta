@@ -16,6 +16,37 @@ const prisma = new PrismaClient();
 // In-memory map of uploadId -> EventEmitter for SSE progress streaming
 const uploadEmitters: Map<string, EventEmitter> = new Map();
 
+// Simple retry helper with exponential backoff for transient GitHub/API errors
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+async function retry<T>(operation: () => Promise<T>, attempts = 5, baseDelay = 300): Promise<T> {
+  let lastErr: any;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await operation();
+    } catch (err: any) {
+      lastErr = err;
+
+      const status = err && (err.status ?? err.response?.status ?? err.response?.statusCode);
+      // Don't retry for client errors or auth problems
+      if (status === 401 || status === 404 || status === 422) {
+        throw err;
+      }
+
+      // If last attempt, throw
+      if (i === attempts - 1) {
+        break;
+      }
+
+      const delay = baseDelay * Math.pow(2, i); // exponential backoff
+      console.warn(`Retry attempt ${i + 1} failed, retrying in ${delay}ms:`, err?.message || err);
+      await sleep(delay);
+    }
+  }
+
+  throw lastErr;
+}
+
 // Configure multer for memory storage
 const upload = multer({ 
   storage: multer.memoryStorage(),
@@ -279,6 +310,82 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
       error: 'Failed to get contents',
       message: error.message 
     });
+  }
+});
+
+// Delete a file from the GitHub repository path
+router.delete('/:projectId/contents/*', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const projectId = await extractProjectId(req);
+    const path = req.params[0] || '';
+
+    if (!path) {
+      return res.status(400).json({ error: 'Path is required to delete a file' });
+    }
+
+    // Get user's GitHub token
+    const ghp = await getUserGithubToken(userId);
+    if (!ghp) {
+      return res.status(401).json({ error: 'GitHub token not found. Please re-authenticate.' });
+    }
+
+    // Get project and owner
+    const project = await prisma.project.findFirst({
+      where: { id: projectId },
+      include: { user: { select: { username: true } } }
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const octokit = new Octokit({ auth: ghp });
+    const repoName = (project.metadata as any)?.fullName?.split('/')[1] || project.name;
+    const owner = project.user.username;
+
+    try {
+  // First, get file metadata to obtain the SHA required for deletion (retry transient errors)
+  const { data: fileData } = await retry(() => octokit.rest.repos.getContent({ owner, repo: repoName, path }), 5, 300);
+
+      if (Array.isArray(fileData)) {
+        return res.status(400).json({ error: 'Path is a directory, not a file' });
+      }
+
+      const sha = (fileData as any).sha;
+      if (!sha) {
+        return res.status(400).json({ error: 'Unable to determine file SHA for deletion' });
+      }
+
+      // Delete the file (retry transient errors)
+      const deleteResp = await retry(() => octokit.request('DELETE /repos/{owner}/{repo}/contents/{path}', {
+        owner,
+        repo: repoName,
+        path,
+        message: `Delete ${path}`,
+        sha
+      }), 5, 300);
+
+      return res.json({ message: 'File deleted successfully', result: deleteResp.data });
+    } catch (error: any) {
+      if (error.status === 401) {
+        return res.status(401).json({ 
+          error: 'GitHub authentication failed', 
+          message: 'Your GitHub token is invalid or has been revoked. Please log in again with a new token.',
+          details: error.message 
+        });
+      }
+      if (error.status === 404) {
+        return res.status(404).json({ error: 'File or repository not found on GitHub' });
+      }
+      if (error.status === 422) {
+        return res.status(400).json({ error: 'Invalid file path or repository state' });
+      }
+      throw error;
+    }
+  } catch (error: any) {
+    console.error('Delete file error:', error);
+    res.status(500).json({ error: 'Failed to delete file', message: error.message });
   }
 });
 
