@@ -218,4 +218,8 @@ router.put('/update-token', authenticate, async (req: AuthRequest, res: Response
   }
 });
 
+router.get('/auth', authenticate, (req: AuthRequest, res: Response) => {
+  return res.json(req.user)
+})
+
 export default router;
