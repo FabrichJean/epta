@@ -6,7 +6,7 @@ import { User } from '@prisma/client';
 
 export interface AuthRequest extends Request {
   userId?: number;
-  user?: User & { [key: string]: any };
+  user?: Partial<User> & { [key: string]: any };
 }
 
 export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -17,6 +17,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     if (token) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
       req.userId = decoded.userId;
+      req.user = {id: req.userId};
     }else if(apiKey){
       const user = await verifyKey(apiKey as string);
       req.userId = user.id;
