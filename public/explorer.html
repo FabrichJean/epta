@@ -450,6 +450,12 @@
                     <button class="btn flex-1" onclick="uploadFile()">Upload</button>
                     <button class="btn btn-secondary" onclick="toggleUploadSection()">Cancel</button>
                 </div>
+                <div id="uploadProgressWrap" class="hidden" style="margin-top:12px;">
+                    <div style="background:#e9ecef; height:10px; border-radius:6px; overflow:hidden;">
+                        <div id="uploadProgressBar" style="width:0%; height:100%; background:linear-gradient(90deg,#667eea,#764ba2);"></div>
+                    </div>
+                    <div id="uploadProgressText" style="font-size:12px; color:#666; margin-top:6px;">0%</div>
+                </div>
             </div>
         </div>
     </div>
@@ -543,6 +549,12 @@
                     <div style="margin-top:16px;">
                         <h3>Preview</h3>
                         <pre id="jsonPreview" style="max-height:300px; overflow:auto; background:#fafafa; padding:10px;"></pre>
+                    </div>
+                    <div id="jsonUploadProgressWrap" class="hidden" style="margin-top:12px;">
+                        <div style="background:#e9ecef; height:10px; border-radius:6px; overflow:hidden;">
+                            <div id="jsonUploadProgressBar" style="width:0%; height:100%; background:linear-gradient(90deg,#667eea,#764ba2);"></div>
+                        </div>
+                        <div id="jsonUploadProgressText" style="font-size:12px; color:#666; margin-top:6px;">0%</div>
                     </div>
                 </div>
             </div>
@@ -814,36 +826,73 @@
             formData.append('path', uploadPath);
             formData.append('file', file);
 
+            // Progress UI
+            const wrap = document.getElementById('uploadProgressWrap');
+            const bar = document.getElementById('uploadProgressBar');
+            const text = document.getElementById('uploadProgressText');
+            wrap.classList.remove('hidden');
+            bar.style.width = '0%';
+            text.textContent = '0%';
+
+            showAlert('Uploading...', 'info', 'uploadAlert');
+
             try {
-                showAlert('Uploading...', 'info', 'uploadAlert');
-                
-                const response = await fetch(`${API_BASE}/projects/${currentProjectId}/upload`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${getToken()}`
-                    },
-                    body: formData
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `${API_BASE}/projects/${currentProjectId}/upload`, true);
+                xhr.setRequestHeader('Authorization', `Bearer ${getToken()}`);
+
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const pct = Math.round((e.loaded / e.total) * 100);
+                        bar.style.width = pct + '%';
+                        text.textContent = pct + '%';
+                    }
+                };
+
+                const result = await new Promise((resolve, reject) => {
+                    xhr.onload = () => {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            try {
+                                const json = JSON.parse(xhr.responseText);
+                                resolve(json);
+                            } catch (err) {
+                                reject(new Error('Invalid JSON response'));
+                            }
+                        } else {
+                            try {
+                                const err = JSON.parse(xhr.responseText);
+                                reject(new Error(err.message || xhr.statusText || `HTTP ${xhr.status}`));
+                            } catch (e) {
+                                reject(new Error(xhr.statusText || `HTTP ${xhr.status}`));
+                            }
+                        }
+                    };
+                    xhr.onerror = () => reject(new Error('Network error during upload'));
+                    xhr.ontimeout = () => reject(new Error('Upload timed out'));
+                    xhr.send(formData);
                 });
 
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.message || 'Upload failed');
-                }
+                showAlert(`✅ File uploaded successfully! Public URL: ${result.file?.publicUrl || result.publicUrl || ''}`, 'success', 'uploadAlert');
 
-                const result = await response.json();
-                showAlert(`✅ File uploaded successfully! Public URL: ${result.publicUrl}`, 'success', 'uploadAlert');
-                
                 // Reset form
                 fileInput.value = '';
                 document.getElementById('selectedFile').style.display = 'none';
-                
+
+                // finalize progress
+                bar.style.width = '100%';
+                text.textContent = '100%';
+
                 // Refresh the file list
                 setTimeout(() => {
                     loadProjectContents(currentPath);
                     toggleUploadSection();
-                }, 1500);
+                    wrap.classList.add('hidden');
+                }, 800);
             } catch (error) {
+                console.error('Upload error', error);
                 showAlert(`Error: ${error.message}`, 'error', 'uploadAlert');
+                // hide progress after a bit
+                setTimeout(() => document.getElementById('uploadProgressWrap').classList.add('hidden'), 1500);
             }
         }
 
@@ -1271,32 +1320,65 @@
             formData.append('path', uploadPath);
             formData.append('file', file);
 
+            // Progress UI
+            const wrap = document.getElementById('jsonUploadProgressWrap');
+            const bar = document.getElementById('jsonUploadProgressBar');
+            const text = document.getElementById('jsonUploadProgressText');
+            wrap.classList.remove('hidden');
+            bar.style.width = '0%';
+            text.textContent = '0%';
+
             try {
                 showAlert('Uploading JSON...', 'info', 'newJsonAlert');
 
-                const response = await fetch(`${API_BASE}/projects/${currentProjectId}/upload`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${getToken()}`
-                    },
-                    body: formData
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `${API_BASE}/projects/${currentProjectId}/upload`, true);
+                xhr.setRequestHeader('Authorization', `Bearer ${getToken()}`);
+
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const pct = Math.round((e.loaded / e.total) * 100);
+                        bar.style.width = pct + '%';
+                        text.textContent = pct + '%';
+                    }
+                };
+
+                const result = await new Promise((resolve, reject) => {
+                    xhr.onload = () => {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            try {
+                                const json = JSON.parse(xhr.responseText);
+                                resolve(json);
+                            } catch (err) {
+                                reject(new Error('Invalid JSON response'));
+                            }
+                        } else {
+                            try {
+                                const err = JSON.parse(xhr.responseText);
+                                reject(new Error(err.message || xhr.statusText || `HTTP ${xhr.status}`));
+                            } catch (e) {
+                                reject(new Error(xhr.statusText || `HTTP ${xhr.status}`));
+                            }
+                        }
+                    };
+                    xhr.onerror = () => reject(new Error('Network error during upload'));
+                    xhr.ontimeout = () => reject(new Error('Upload timed out'));
+                    xhr.send(formData);
                 });
 
-                if (!response.ok) {
-                    const error = await response.json().catch(() => ({}));
-                    throw new Error(error.error || error.message || `HTTP ${response.status}: Upload failed`);
-                }
-
-                const result = await response.json();
-                showAlert(`✅ JSON uploaded: ${result.file.publicUrl}`, 'success', 'newJsonAlert');
+                showAlert(`✅ JSON uploaded: ${result.file?.publicUrl || result.publicUrl || ''}`, 'success', 'newJsonAlert');
                 // close and refresh
+                bar.style.width = '100%';
+                text.textContent = '100%';
                 setTimeout(() => {
                     closeNewJsonModal();
                     loadProjectContents(currentPath);
+                    wrap.classList.add('hidden');
                 }, 1200);
             } catch (err) {
                 console.error('Upload JSON error:', err);
                 showAlert(`❌ Error: ${err.message}`, 'error', 'newJsonAlert');
+                setTimeout(() => document.getElementById('jsonUploadProgressWrap').classList.add('hidden'), 1500);
             }
         }
     </script>

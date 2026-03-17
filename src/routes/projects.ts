@@ -1,6 +1,9 @@
 import { Router, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { Octokit } from '@octokit/rest';
+import got from 'got';
+import EventEmitter from 'events';
+import jwt from 'jsonwebtoken';
 import multer from 'multer';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { getUserGithubToken } from '../utils/github.com';
@@ -9,6 +12,9 @@ import { extractProjectId } from '../utils/project';
 
 const router = Router();
 const prisma = new PrismaClient();
+
+// In-memory map of uploadId -> EventEmitter for SSE progress streaming
+const uploadEmitters: Map<string, EventEmitter> = new Map();
 
 // Configure multer for memory storage
 const upload = multer({ 
@@ -276,6 +282,58 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
   }
 });
 
+// SSE endpoint for upload progress streaming
+router.get('/uploads/progress/:uploadId', async (req: AuthRequest, res: Response) => {
+  const uploadId = req.params.uploadId;
+
+  // Authenticate: EventSource cannot set custom headers in many clients, so allow token via query param as fallback
+  const headerToken = req.headers.authorization?.split(' ')[1];
+  const queryToken = typeof req.query.token === 'string' ? req.query.token : undefined;
+  const token = headerToken || queryToken;
+  if (!token) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
+    req.userId = decoded.userId;
+    req.user = { id: req.userId } as any;
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+
+  // Set SSE headers
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  // flush headers if supported
+  (res as any).flushHeaders?.();
+
+  let emitter = uploadEmitters.get(uploadId);
+  if (!emitter) {
+    emitter = new EventEmitter();
+    uploadEmitters.set(uploadId, emitter);
+  }
+
+  const onProgress = (payload: any) => {
+    try {
+      res.write(`data: ${JSON.stringify(payload)}\n\n`);
+    } catch (e) {
+      // ignore write errors
+    }
+  };
+
+  emitter.on('progress', onProgress);
+
+  req.on('close', () => {
+    emitter!.off('progress', onProgress);
+    // If no listeners remain, remove the emitter to free memory
+    if (emitter!.listenerCount('progress') === 0) {
+      uploadEmitters.delete(uploadId);
+    }
+  });
+});
+
 // Update project - updates GitHub repo name and database
 router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
   try {
@@ -493,7 +551,100 @@ router.post('/:projectId/upload', authenticate, upload.single('file'), async (re
 
     // Upload file to GitHub
     try {
-  
+      // If client provided an uploadId and is listening on the SSE endpoint, use got to stream the upload and emit progress
+      const uploadId = (req.body && (req.body.uploadId as string)) || undefined;
+      let emitter: EventEmitter | undefined = undefined;
+      if (uploadId) {
+        emitter = uploadEmitters.get(uploadId);
+        if (!emitter) {
+          emitter = new EventEmitter();
+          uploadEmitters.set(uploadId, emitter);
+        }
+      }
+
+      if (uploadId && emitter) {
+        // Use got stream to PUT the new content and listen for uploadProgress
+        const url = `https://api.github.com/repos/${owner}/${repoName}/contents/${encodeURI(path)}`;
+        const payload = {
+          message: `Upload ${file.originalname}`,
+          content: content
+        };
+
+        const headers = {
+          Authorization: `token ${ghp}`,
+          'user-agent': 'epta-server',
+          Accept: 'application/vnd.github.v3+json',
+          'content-type': 'application/json'
+        };
+
+        const stream = got.stream.put(url, {
+          headers,
+          body: JSON.stringify(payload),
+        });
+
+        stream.on('uploadProgress', (p: any) => {
+          const percent = p && typeof p.percent === 'number' ? Math.round(p.percent * 100) : 0;
+          emitter!.emit('progress', { percent, transferred: p.transferred ?? 0, total: p.total ?? 0, stage: 'uploading' });
+        });
+
+        let respText = '';
+        stream.on('data', (chunk: any) => {
+          respText += chunk.toString();
+        });
+
+        await new Promise<void>((resolve, reject) => {
+          stream.on('end', () => resolve());
+          stream.on('error', (err: any) => reject(err));
+        });
+
+        const respJson = JSON.parse(respText || '{}');
+
+        // Emit final progress
+        emitter.emit('progress', { percent: 100, stage: 'done' });
+        // Clean up emitter since upload finished
+        uploadEmitters.delete(uploadId);
+
+        // Build short url and response using GitHub response structure
+        const ghContent = respJson.content || {};
+
+        // Generate short code for file serving
+        let shortCode = generateShortCode();
+        let attempts = 0;
+        while (await prisma.shortUrl.findUnique({ where: { shortCode } })) {
+          shortCode = generateShortCode();
+          attempts++;
+          if (attempts > 10) {
+            shortCode = generateShortCode(8);
+          }
+        }
+
+        await prisma.shortUrl.create({
+          data: {
+            shortCode,
+            originalUrl: ghContent.download_url || '',
+            userId
+          }
+        });
+
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const publicUrl = `${baseUrl}/f/${shortCode}`;
+
+        return res.json({
+          message: 'File uploaded successfully',
+          file: {
+            name: file.originalname,
+            path: path,
+            size: file.size,
+            sha: ghContent.sha,
+            url: ghContent.html_url,
+            publicUrl: publicUrl,
+            downloadUrl: `${baseUrl}/s/${shortCode}`,
+            originalDownloadUrl: ghContent.download_url,
+          },
+        });
+      }
+
+      // Fallback: use octokit if no uploadId provided
       const { data } = await octokit.rest.repos.createOrUpdateFileContents({
         owner,
         repo: repoName,
@@ -541,6 +692,20 @@ router.post('/:projectId/upload', authenticate, upload.single('file'), async (re
     } catch (error: any) {
       // console.log(error);
       
+      // Try to map got errors where possible
+      if (error && (error as any).response && (error as any).response.statusCode === 401) {
+        return res.status(401).json({ 
+          error: 'GitHub authentication failed', 
+          message: 'Your GitHub token is invalid or has been revoked. Please log in again with a new token.',
+          details: (error as any).message 
+        });
+      }
+      if (error && (error as any).response && (error as any).response.statusCode === 404) {
+        return res.status(404).json({ error: 'Repository not found on GitHub' });
+      }
+      if (error && (error as any).response && (error as any).response.statusCode === 422) {
+        return res.status(400).json({ error: 'Invalid file path or repository state' });
+      }
       if (error.status === 401) {
         return res.status(401).json({ 
           error: 'GitHub authentication failed', 
