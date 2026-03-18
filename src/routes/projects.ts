@@ -389,6 +389,125 @@ router.delete('/:projectId/contents/*', authenticate, async (req: AuthRequest, r
   }
 });
 
+// Create a new file at the given path in the repository
+router.post('/:projectId/contents/*', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const projectId = await extractProjectId(req);
+    const path = req.params[0] || '';
+
+    if (!path) {
+      return res.status(400).json({ error: 'Path is required to create a file' });
+    }
+
+    // Expect payload { contents: string | object, message?: string }
+    const rawContents = (req.body && (req.body.contents ?? req.body.content)) as any;
+    if (rawContents === undefined || rawContents === null) {
+      return res.status(400).json({ error: 'Missing contents in request body' });
+    }
+
+    // Normalize contents to string
+    const contentsStr = typeof rawContents === 'string' ? rawContents : JSON.stringify(rawContents, null, 2);
+
+    // Get user's GitHub token
+    const ghp = await getUserGithubToken(userId);
+    if (!ghp) {
+      return res.status(401).json({ error: 'GitHub token not found. Please re-authenticate.' });
+    }
+
+    // Get project and owner
+    const project = await prisma.project.findFirst({
+      where: { id: projectId },
+      include: { user: { select: { username: true } } }
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const octokit = new Octokit({ auth: ghp });
+    const repoName = (project.metadata as any)?.fullName?.split('/')[1] || project.name;
+    const owner = project.user.username;
+
+    // Check if file already exists
+    try {
+      await retry(() => octokit.rest.repos.getContent({ owner, repo: repoName, path }), 3, 200);
+      // If getContent succeeds, file exists -> conflict
+      return res.status(409).json({ error: 'File already exists at this path' });
+    } catch (err: any) {
+      // If error is 404, file does not exist and we can create it. Any other error should bubble.
+      const status = err && (err.status ?? err.response?.status ?? err.response?.statusCode);
+      if (status && status !== 404) {
+        throw err;
+      }
+    }
+
+    const contentBase64 = Buffer.from(contentsStr, 'utf8').toString('base64');
+    const message = (req.body && (req.body.message as string)) || `Create ${path}`;
+
+    try {
+      const { data } = await retry(() => octokit.rest.repos.createOrUpdateFileContents({
+        owner,
+        repo: repoName,
+        path,
+        message,
+        content: contentBase64,
+      }), 5, 300);
+
+      // Create short URL
+      let shortCode = generateShortCode();
+      let attempts = 0;
+      while (await prisma.shortUrl.findUnique({ where: { shortCode } })) {
+        shortCode = generateShortCode();
+        attempts++;
+        if (attempts > 10) shortCode = generateShortCode(8);
+      }
+
+      await prisma.shortUrl.create({
+        data: {
+          shortCode,
+          originalUrl: data.content?.download_url || '',
+          userId
+        }
+      });
+
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const publicUrl = `${baseUrl}/f/${shortCode}`;
+
+      return res.status(201).json({
+        message: 'File created successfully',
+        file: {
+          name: data.content?.name || path.split('/').pop(),
+          path,
+          sha: data.content?.sha,
+          url: data.content?.html_url,
+          publicUrl,
+          downloadUrl: `${baseUrl}/s/${shortCode}`,
+          originalDownloadUrl: data.content?.download_url,
+        }
+      });
+    } catch (error: any) {
+      if (error.status === 401) {
+        return res.status(401).json({ 
+          error: 'GitHub authentication failed', 
+          message: 'Your GitHub token is invalid or has been revoked. Please log in again with a new token.',
+          details: error.message 
+        });
+      }
+      if (error.status === 404) {
+        return res.status(404).json({ error: 'Repository not found on GitHub' });
+      }
+      if (error.status === 422) {
+        return res.status(400).json({ error: 'Invalid file path or repository state' });
+      }
+      throw error;
+    }
+  } catch (error: any) {
+    console.error('Create file error:', error);
+    res.status(500).json({ error: 'Failed to create file', message: error.message });
+  }
+});
+
 // Update content of an existing file in the repository
 router.put('/:projectId/contents/*', authenticate, upload.single('file'), async (req: AuthRequest, res: Response) => {
   try {
