@@ -543,7 +543,6 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res: Response) => {
     const existingProject = await prisma.project.findFirst({
       where: { 
         id: projectId,
-        userId 
       },
     });
 
