@@ -389,6 +389,129 @@ router.delete('/:projectId/contents/*', authenticate, async (req: AuthRequest, r
   }
 });
 
+// Update content of an existing file in the repository
+router.put('/:projectId/contents/*', authenticate, upload.single('file'), async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const projectId = await extractProjectId(req);
+    const path = req.params[0] || '';
+
+    if (!path) {
+      return res.status(400).json({ error: 'Path is required to update a file' });
+    }
+
+    // Get user's GitHub token
+    const ghp = await getUserGithubToken(userId);
+    if (!ghp) {
+      return res.status(401).json({ error: 'GitHub token not found. Please re-authenticate.' });
+    }
+
+    // Get project and owner
+    const project = await prisma.project.findFirst({
+      where: { id: projectId },
+      include: { user: { select: { username: true } } }
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const octokit = new Octokit({ auth: ghp });
+    const repoName = (project.metadata as any)?.fullName?.split('/')[1] || project.name;
+    const owner = project.user.username;
+
+    // Determine new content: prefer uploaded file, otherwise use req.body.content
+    const file = req.file;
+    let contentBase64: string;
+
+    if (file) {
+      contentBase64 = file.buffer.toString('base64');
+    } else if (typeof req.body.content === 'string') {
+      // Treat body.content as raw text and encode to base64
+      contentBase64 = Buffer.from(req.body.content, 'utf8').toString('base64');
+    } else {
+      return res.status(400).json({ error: 'No content provided. Attach a file or set body.content.' });
+    }
+
+    const commitMessage = (req.body && (req.body.message as string)) || `Update ${path}`;
+
+    try {
+      // Get existing file to retrieve SHA
+      const { data: fileData } = await retry(() => octokit.rest.repos.getContent({ owner, repo: repoName, path }), 5, 300);
+
+      if (Array.isArray(fileData)) {
+        return res.status(400).json({ error: 'Path is a directory, not a file' });
+      }
+
+      const sha = (fileData as any).sha;
+      if (!sha) {
+        return res.status(400).json({ error: 'Unable to determine file SHA for update' });
+      }
+
+      // Update the file content using Octokit
+      const { data } = await retry(() => octokit.rest.repos.createOrUpdateFileContents({
+        owner,
+        repo: repoName,
+        path,
+        message: commitMessage,
+        content: contentBase64,
+        sha,
+      }), 5, 300);
+
+      // Create a short URL for the updated file
+      let shortCode = generateShortCode();
+      let attempts = 0;
+      while (await prisma.shortUrl.findUnique({ where: { shortCode } })) {
+        shortCode = generateShortCode();
+        attempts++;
+        if (attempts > 10) shortCode = generateShortCode(8);
+      }
+
+      await prisma.shortUrl.create({
+        data: {
+          shortCode,
+          originalUrl: data.content?.download_url || '',
+          userId
+        }
+      });
+
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const publicUrl = `${baseUrl}/f/${shortCode}`;
+
+      return res.json({
+        message: 'File updated successfully',
+        file: {
+          name: data.content?.name || path.split('/').pop(),
+          path,
+          sha: data.content?.sha,
+          url: data.content?.html_url,
+          publicUrl,
+          downloadUrl: `${baseUrl}/s/${shortCode}`,
+          originalDownloadUrl: data.content?.download_url,
+        }
+      });
+    } catch (error: any) {
+      if (error.status === 401) {
+        return res.status(401).json({ 
+          error: 'GitHub authentication failed', 
+          message: 'Your GitHub token is invalid or has been revoked. Please log in again with a new token.',
+          details: error.message 
+        });
+      }
+      if (error.status === 404) {
+        return res.status(404).json({ error: 'File or repository not found on GitHub' });
+      }
+      if (error.status === 422) {
+        return res.status(400).json({ error: 'Invalid file path or repository state' });
+      }
+      throw error;
+    }
+  } catch (error: any) {
+    console.error('Update file error:', error);
+    res.status(500).json({ error: 'Failed to update file', message: error.message });
+  }
+});
+
 // SSE endpoint for upload progress streaming
 router.get('/uploads/progress/:uploadId', async (req: AuthRequest, res: Response) => {
   const uploadId = req.params.uploadId;

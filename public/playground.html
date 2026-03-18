@@ -482,6 +482,80 @@
                     </div>
                     <button onclick="uploadFile()">Upload File</button>
                     <div id="upload-response"></div>
+                    <div style="margin-top:12px">
+                        <label style="display:block;margin-bottom:6px;color:#555;font-weight:600">Client → Server Upload</label>
+                        <progress id="client-upload-progress" value="0" max="100" style="width:100%"></progress>
+                        <div id="client-upload-text" style="font-size:12px;color:#666;margin-top:6px"></div>
+                    </div>
+                    <div style="margin-top:12px">
+                        <label style="display:block;margin-bottom:6px;color:#555;font-weight:600">Server → GitHub Commit Progress</label>
+                        <progress id="server-upload-progress" value="0" max="100" style="width:100%"></progress>
+                        <div id="server-upload-text" style="font-size:12px;color:#666;margin-top:6px"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Update File -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                    <span class="endpoint-title">Update File Content</span>
+                    <span class="method put">PUT</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Endpoint:</strong> /projects/:id/contents/*</p>
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">🔑 Requires Authentication - Update an existing file's content</p>
+                    <div class="form-row">
+                        <label>JWT Token (optional - uses global token if empty):</label>
+                        <input type="text" id="update-file-token" placeholder="Leave empty to use global token">
+                    </div>
+                    <div class="form-row">
+                        <label>Project ID:</label>
+                        <input type="text" id="update-file-project-id" placeholder="1">
+                    </div>
+                    <div class="form-row">
+                        <label>Path (full path in repo):</label>
+                        <input type="text" id="update-file-path" placeholder="docs/myfile.json">
+                    </div>
+                    <div class="form-row">
+                        <label>Replace with File (optional):</label>
+                        <input type="file" id="update-file-input">
+                    </div>
+                    <div class="form-row">
+                        <label>Or raw content (used if no file selected):</label>
+                        <textarea id="update-file-content" rows="6" placeholder="Type raw file content here..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <label>Commit message (optional):</label>
+                        <input type="text" id="update-file-message" placeholder="Update file content">
+                    </div>
+                    <button onclick="updateFile()">Update File</button>
+                    <div id="update-file-response"></div>
+                </div>
+            </div>
+
+            <!-- Delete File -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                    <span class="endpoint-title">Delete File</span>
+                    <span class="method delete">DELETE</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Endpoint:</strong> /projects/:id/contents/*</p>
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">🔑 Requires Authentication - Delete a file from the repository</p>
+                    <div class="form-row">
+                        <label>JWT Token (optional - uses global token if empty):</label>
+                        <input type="text" id="delete-file-token" placeholder="Leave empty to use global token">
+                    </div>
+                    <div class="form-row">
+                        <label>Project ID:</label>
+                        <input type="text" id="delete-file-project-id" placeholder="1">
+                    </div>
+                    <div class="form-row">
+                        <label>Path (full path in repo):</label>
+                        <input type="text" id="delete-file-path" placeholder="docs/myfile.json">
+                    </div>
+                    <button onclick="deleteFile()">Delete File</button>
+                    <div id="delete-file-response"></div>
                 </div>
             </div>
 
@@ -843,23 +917,66 @@
                 return;
             }
 
+            // Use XHR to get client->server upload progress and SSE for server->GitHub progress
+            const uploadId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : ('upload-' + Date.now());
+
+            // Open SSE to listen to server->GitHub progress
+            const esUrl = `${getBaseUrl()}/projects/uploads/progress/${uploadId}?token=${encodeURIComponent(token)}`;
+            const es = new EventSource(esUrl);
+            const serverProgressEl = document.getElementById('server-upload-progress');
+            const serverProgressText = document.getElementById('server-upload-text');
+            es.onmessage = (ev) => {
+                try {
+                    const payload = JSON.parse(ev.data);
+                    if (payload && typeof payload.percent === 'number') {
+                        serverProgressEl.value = payload.percent;
+                        serverProgressText.textContent = `Stage: ${payload.stage || 'uploading'} — ${payload.percent}%`;
+                    } else {
+                        serverProgressText.textContent = JSON.stringify(payload);
+                    }
+                } catch (e) {
+                    serverProgressText.textContent = ev.data;
+                }
+            };
+            es.onerror = (e) => {
+                serverProgressText.textContent = 'SSE connection error';
+            };
+
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
             formData.append('path', path);
+            formData.append('uploadId', uploadId);
 
-            try {
-                const response = await fetch(`${getBaseUrl()}/projects/${projectId}/upload`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: formData
-                });
-                const data = await response.json();
-                showResponse('upload-response', data, !response.ok);
-            } catch (error) {
-                showResponse('upload-response', { error: error.message }, true);
-            }
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', `${getBaseUrl()}/projects/${projectId}/upload`);
+            xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+            const clientProgressEl = document.getElementById('client-upload-progress');
+            const clientProgressText = document.getElementById('client-upload-text');
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const pct = Math.round((e.loaded / e.total) * 100);
+                    clientProgressEl.value = pct;
+                    clientProgressText.textContent = `${pct}% (${e.loaded} / ${e.total} bytes)`;
+                }
+            };
+
+            xhr.onload = () => {
+                try {
+                    const data = JSON.parse(xhr.responseText || '{}');
+                    showResponse('upload-response', data, xhr.status >= 400);
+                } catch (err) {
+                    showResponse('upload-response', { error: 'Invalid JSON response' }, true);
+                }
+                es.close();
+            };
+
+            xhr.onerror = () => {
+                showResponse('upload-response', { error: 'Upload request failed' }, true);
+                es.close();
+            };
+
+            xhr.send(formData);
         }
 
         async function deleteProject() {
@@ -880,6 +997,73 @@
                 showResponse('delete-project-response', data, !response.ok);
             } catch (error) {
                 showResponse('delete-project-response', { error: error.message }, true);
+            }
+        }
+
+        async function updateFile() {
+            const customToken = document.getElementById('update-file-token').value.trim();
+            const token = customToken || getToken();
+            const projectId = document.getElementById('update-file-project-id').value.trim();
+            const path = document.getElementById('update-file-path').value.trim();
+            const fileInput = document.getElementById('update-file-input');
+            const rawContent = document.getElementById('update-file-content').value;
+            const message = document.getElementById('update-file-message').value.trim();
+
+            if (!projectId || !path) {
+                showResponse('update-file-response', { error: 'Please enter project id and path' }, true);
+                return;
+            }
+
+            try {
+                // If file selected, send multipart form
+                if (fileInput.files && fileInput.files[0]) {
+                    const form = new FormData();
+                    form.append('file', fileInput.files[0]);
+                    form.append('message', message || `Update ${path}`);
+
+                    const response = await fetch(`${getBaseUrl()}/projects/${projectId}/contents/${encodeURIComponent(path)}`, {
+                        method: 'PUT',
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        body: form
+                    });
+                    const data = await response.json();
+                    showResponse('update-file-response', data, !response.ok);
+                    return;
+                }
+
+                // Otherwise send raw content as JSON
+                const response = await fetch(`${getBaseUrl()}/projects/${projectId}/contents/${encodeURIComponent(path)}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ content: rawContent, message: message || `Update ${path}` })
+                });
+                const data = await response.json();
+                showResponse('update-file-response', data, !response.ok);
+            } catch (error) {
+                showResponse('update-file-response', { error: error.message }, true);
+            }
+        }
+
+        async function deleteFile() {
+            const customToken = document.getElementById('delete-file-token').value.trim();
+            const token = customToken || getToken();
+            const projectId = document.getElementById('delete-file-project-id').value.trim();
+            const path = document.getElementById('delete-file-path').value.trim();
+
+            if (!projectId || !path) {
+                showResponse('delete-file-response', { error: 'Please enter project id and path' }, true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${getBaseUrl()}/projects/${projectId}/contents/${encodeURIComponent(path)}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                showResponse('delete-file-response', data, !response.ok);
+            } catch (error) {
+                showResponse('delete-file-response', { error: error.message }, true);
             }
         }
 
