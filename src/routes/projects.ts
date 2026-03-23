@@ -152,6 +152,100 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
   }
 });
 
+// Search across projects, folders and files by keyword
+// Query params: q (required), projectId (optional), depth (optional, default 2)
+router.get('/search', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const q = (req.query.q as string) || '';
+    const projectFilter = req.query.projectId ? parseInt(req.query.projectId as string) : undefined;
+    const maxDepth = req.query.depth ? Math.max(0, parseInt(req.query.depth as string)) : 2;
+
+    if (!q || q.trim().length === 0) {
+      return res.status(400).json({ error: 'Query parameter q is required' });
+    }
+
+    const keyword = q.trim().toLowerCase();
+
+    // Fetch user's projects (optionally filter by projectId)
+    const projects = await prisma.project.findMany({
+      where: projectFilter ? { id: projectFilter } : {},
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Simple project-level matches from DB (name, description)
+    const projectMatches = projects
+      .filter(p => (p.name && p.name.toLowerCase().includes(keyword)) || (p.description && p.description.toLowerCase().includes(keyword)))
+      .map(p => ({ id: p.id, name: p.name, description: p.description, link: p.link }));
+
+    // Prepare repository-level search (files/directories)
+    const ghp = await getUserGithubToken(userId);
+    // If no token, we still return projectMatches but skip repo search
+    if (!ghp) {
+      return res.json({ projects: projectMatches, repoMatches: [] });
+    }
+
+    const octokit = new Octokit({ auth: ghp });
+
+    // Helper: recursively traverse repo contents up to depth and match names/paths
+    async function traverseAndMatch(owner: string, repo: string, path: string, depth: number, results: any[]) {
+      try {
+        const { data } = await retry(() => octokit.rest.repos.getContent({ owner, repo, path: path || '' }), 3, 200);
+
+        // data can be array or single
+        const items = Array.isArray(data) ? data : [data];
+
+        for (const item of items) {
+          const name = (item.name || '').toString();
+          const itemPath = (item.path || '').toString();
+          const lower = (name + ' ' + itemPath).toLowerCase();
+          if (lower.includes(keyword)) {
+            results.push({ type: item.type, name, path: itemPath, size: item.size, url: item.html_url, downloadUrl: item.download_url });
+          }
+
+          if (item.type === 'dir' && depth > 0) {
+            // Recurse into directory
+            await traverseAndMatch(owner, repo, item.path, depth - 1, results);
+          }
+        }
+      } catch (err: any) {
+        // If path not found or access denied, skip
+        const status = err && (err.status ?? err.response?.status ?? err.response?.statusCode);
+        if (status === 404 || status === 403) return;
+        throw err;
+      }
+    }
+
+    const repoMatches: Array<any> = [];
+
+    // Iterate projects and search their repos
+    for (const p of projects) {
+      try {
+        const owner = p.userId ? (await prisma.user.findUnique({ where: { id: p.userId }, select: { username: true } }))?.username : undefined;
+        // If owner unknown from DB metadata, try metadata.fullName
+        const repoName = (p.metadata as any)?.fullName ? (p.metadata as any).fullName.split('/')[1] : p.name;
+        if (!owner || !repoName) continue;
+
+        const matches: any[] = [];
+        // Start traversal at root
+        await traverseAndMatch(owner, repoName, '', maxDepth, matches);
+
+        if (matches.length > 0) {
+          repoMatches.push({ projectId: p.id, projectName: p.name, owner, repo: repoName, matches });
+        }
+      } catch (err) {
+        // ignore per-project errors to keep results best-effort
+        console.warn('Search error for project', p.id, (err as any)?.message || err);
+      }
+    }
+
+    res.json({ projects: projectMatches, repoMatches });
+  } catch (error: any) {
+    console.error('Search error:', error);
+    res.status(500).json({ error: 'Failed to perform search', message: error.message });
+  }
+});
+
 // Get single project
 router.get('/:id', authenticate, async (req: AuthRequest, res: Response) => {
   try {

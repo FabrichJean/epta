@@ -648,6 +648,42 @@
                     <div id="delete-url-response"></div>
                 </div>
             </div>
+
+            <!-- Search Projects and Files -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                    <span class="endpoint-title">Search Projects & Files</span>
+                    <span class="method get">GET</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Endpoint:</strong> /projects/search</p>
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">🔑 Requires Authentication - Search across projects and repository files/folders</p>
+                    <div class="form-row">
+                        <label>JWT Token (optional - uses global token if empty):</label>
+                        <input type="text" id="search-token" placeholder="Leave empty to use global token">
+                    </div>
+                    <div class="form-row">
+                        <label>Search Keyword (required):</label>
+                        <input type="text" id="search-keyword" placeholder="readme, utils, component, etc.">
+                        <small style="color: #666; font-size: 0.85em; display: block; margin-top: 5px;">
+                            💡 Case-insensitive search in project names, descriptions, and file/folder names
+                        </small>
+                    </div>
+                    <div class="form-row">
+                        <label>Project ID (optional - search within specific project):</label>
+                        <input type="text" id="search-project-id" placeholder="Leave empty to search all projects">
+                    </div>
+                    <div class="form-row">
+                        <label>Search Depth (optional - how deep to search in folders):</label>
+                        <input type="number" id="search-depth" value="2" min="0" max="10" placeholder="2">
+                        <small style="color: #666; font-size: 0.85em; display: block; margin-top: 5px;">
+                            💡 Higher values search deeper but take more time. 0 = root only, 2 = default
+                        </small>
+                    </div>
+                    <button onclick="searchContent()">Search</button>
+                    <div id="search-response"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1115,6 +1151,87 @@
             } catch (error) {
                 showResponse('delete-url-response', { error: error.message }, true);
             }
+        }
+
+        async function searchContent() {
+            const customToken = document.getElementById('search-token').value.trim();
+            const token = customToken || getToken();
+            const keyword = document.getElementById('search-keyword').value.trim();
+            const projectId = document.getElementById('search-project-id').value.trim();
+            const depth = document.getElementById('search-depth').value.trim();
+
+            if (!keyword) {
+                showResponse('search-response', { error: 'Search keyword is required' }, true);
+                return;
+            }
+
+            try {
+                // Build query parameters
+                const params = new URLSearchParams({ q: keyword });
+                if (projectId) params.append('projectId', projectId);
+                if (depth) params.append('depth', depth);
+
+                const response = await fetch(`${getBaseUrl()}/projects/search?${params.toString()}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showSearchResults('search-response', data);
+                } else {
+                    showResponse('search-response', data, true);
+                }
+            } catch (error) {
+                showResponse('search-response', { error: error.message }, true);
+            }
+        }
+
+        function showSearchResults(elementId, data) {
+            const element = document.getElementById(elementId);
+            const { projects = [], repoMatches = [] } = data;
+            
+            let html = '<div class="response success"><h4>✅ Search Results</h4>';
+            
+            // Project matches
+            if (projects.length > 0) {
+                html += '<h5 style="margin: 15px 0 10px 0; color: #333;">📁 Project Matches (' + projects.length + ')</h5>';
+                html += '<div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 15px;">';
+                projects.forEach(p => {
+                    html += `<div style="margin-bottom: 8px; padding: 8px; background: white; border-radius: 4px;">
+                        <strong>${p.name}</strong> (ID: ${p.id})<br>
+                        <small style="color: #666;">${p.description || 'No description'}</small><br>
+                        <a href="${p.link}" target="_blank" style="color: #667eea; text-decoration: none;">${p.link}</a>
+                    </div>`;
+                });
+                html += '</div>';
+            } else {
+                html += '<p style="color: #666; font-style: italic;">No matching projects found.</p>';
+            }
+            
+            // Repository file/folder matches
+            if (repoMatches.length > 0) {
+                html += '<h5 style="margin: 15px 0 10px 0; color: #333;">📄 File & Folder Matches</h5>';
+                repoMatches.forEach(repo => {
+                    html += `<div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                        <h6 style="margin: 0 0 8px 0; color: #667eea;">${repo.projectName} (${repo.owner}/${repo.repo})</h6>`;
+                    
+                    repo.matches.forEach(match => {
+                        const icon = match.type === 'dir' ? '📁' : '📄';
+                        html += `<div style="margin: 4px 0; padding: 6px; background: white; border-radius: 3px; font-size: 0.9em;">
+                            ${icon} <strong>${match.name}</strong><br>
+                            <small style="color: #666;">Path: ${match.path}</small>`;
+                        if (match.size) html += `<small style="color: #666;"> | Size: ${match.size} bytes</small>`;
+                        if (match.url) html += `<br><a href="${match.url}" target="_blank" style="color: #667eea; font-size: 0.8em;">View on GitHub</a>`;
+                        html += '</div>';
+                    });
+                    html += '</div>';
+                });
+            } else if (projects.length === 0) {
+                html += '<p style="color: #666; font-style: italic;">No matching files or folders found.</p>';
+            }
+            
+            html += '</div>';
+            element.innerHTML = html;
         }
     </script>
 </body>
