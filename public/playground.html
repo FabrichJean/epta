@@ -684,6 +684,39 @@
                     <div id="search-response"></div>
                 </div>
             </div>
+
+            <!-- Create Folder -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                    <span class="endpoint-title">Create Folder</span>
+                    <span class="method post">POST</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Endpoint:</strong> /projects/{projectId}/folders/{path}</p>
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">🔑 Requires Authentication - Create a new folder in repository by adding a .gitkeep file</p>
+                    <div class="form-row">
+                        <label>JWT Token (optional - uses global token if empty):</label>
+                        <input type="text" id="folder-token" placeholder="Leave empty to use global token">
+                    </div>
+                    <div class="form-row">
+                        <label>Project ID (required):</label>
+                        <input type="text" id="folder-project-id" placeholder="Enter project ID">
+                    </div>
+                    <div class="form-row">
+                        <label>Folder Path (required):</label>
+                        <input type="text" id="folder-path" placeholder="e.g., src/components">
+                        <small style="color: #666; font-size: 0.85em; display: block; margin-top: 5px;">
+                            💡 Will create nested folders if they don't exist. Adds .gitkeep file to track empty folders.
+                        </small>
+                    </div>
+                    <div class="form-row">
+                        <label>Commit Message (optional):</label>
+                        <input type="text" id="folder-message" placeholder="Create new folder structure">
+                    </div>
+                    <button onclick="createFolder()">Create Folder</button>
+                    <div id="folder-response"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1232,6 +1265,52 @@
             
             html += '</div>';
             element.innerHTML = html;
+        }
+
+        // Create folder function
+        async function createFolder() {
+            const customToken = document.getElementById('folder-token').value.trim();
+            const token = customToken || getToken();
+            const projectId = document.getElementById('folder-project-id').value.trim();
+            const folderPath = document.getElementById('folder-path').value.trim();
+            const message = document.getElementById('folder-message').value.trim();
+
+            if (!projectId || !folderPath) {
+                showResponse('folder-response', { error: 'Project ID and folder path are required' }, true);
+                return;
+            }
+
+            if (!token) {
+                showResponse('folder-response', { error: 'Auth token is required' }, true);
+                return;
+            }
+
+            const body = {};
+            if (message) body.message = message;
+
+            try {
+                const response = await fetch(`${getBaseUrl()}/projects/${projectId}/folders/${encodeURIComponent(folderPath)}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                const result = await response.json();
+                showResponse('folder-response', result, !response.ok);
+
+                if (response.ok) {
+                    // Clear form on success
+                    document.getElementById('folder-project-id').value = '';
+                    document.getElementById('folder-path').value = '';
+                    document.getElementById('folder-message').value = '';
+                }
+            } catch (error) {
+                console.error('Create folder error:', error);
+                showResponse('folder-response', { error: 'Request failed', details: error.message }, true);
+            }
         }
     </script>
 </body>

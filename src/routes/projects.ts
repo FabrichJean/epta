@@ -602,6 +602,102 @@ router.post('/:projectId/contents/*', authenticate, async (req: AuthRequest, res
   }
 });
 
+// Create a folder in the repository by creating a .gitkeep file
+router.post('/:projectId/folders/*', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const projectId = await extractProjectId(req);
+    const folderPath = req.params[0] || '';
+
+    if (!folderPath) {
+      return res.status(400).json({ error: 'Folder path is required' });
+    }
+
+    // Clean folder path (remove trailing slash if present)
+    const cleanFolderPath = folderPath.replace(/\/$/, '');
+    const gitkeepPath = `${cleanFolderPath}/.gitkeep`;
+
+    // Get user's GitHub token
+    const ghp = await getUserGithubToken(userId);
+    if (!ghp) {
+      return res.status(401).json({ error: 'GitHub token not found. Please re-authenticate.' });
+    }
+
+    // Get project and owner
+    const project = await prisma.project.findFirst({
+      where: { id: projectId },
+      include: { user: { select: { username: true } } }
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const octokit = new Octokit({ auth: ghp });
+    const repoName = (project.metadata as any)?.fullName?.split('/')[1] || project.name;
+    const owner = project.user.username;
+
+    // Check if folder already exists by checking for .gitkeep or any file in that directory
+    try {
+      await retry(() => octokit.rest.repos.getContent({ owner, repo: repoName, path: cleanFolderPath }), 3, 200);
+      // If getContent succeeds, folder already exists
+      return res.status(409).json({ error: 'Folder already exists at this path' });
+    } catch (err: any) {
+      // If error is 404, folder does not exist and we can create it
+      const status = err && (err.status ?? err.response?.status ?? err.response?.statusCode);
+      if (status && status !== 404) {
+        throw err;
+      }
+    }
+
+    // Create .gitkeep file to establish the folder
+    const gitkeepContent = '# This file keeps the directory in git\n# You can safely delete this file if the directory contains other files\n';
+    const contentBase64 = Buffer.from(gitkeepContent, 'utf8').toString('base64');
+    const message = (req.body && (req.body.message as string)) || `Create folder ${cleanFolderPath}`;
+
+    try {
+      const { data } = await retry(() => octokit.rest.repos.createOrUpdateFileContents({
+        owner,
+        repo: repoName,
+        path: gitkeepPath,
+        message,
+        content: contentBase64,
+      }), 5, 300);
+
+      return res.status(201).json({
+        message: 'Folder created successfully',
+        folder: {
+          path: cleanFolderPath,
+          gitkeepFile: {
+            name: '.gitkeep',
+            path: gitkeepPath,
+            sha: data.content?.sha,
+            url: data.content?.html_url,
+          }
+        }
+      });
+    } catch (error: any) {
+      if (error.status === 401) {
+        return res.status(401).json({ 
+          error: 'GitHub authentication failed', 
+          message: 'Your GitHub token is invalid or has been revoked. Please log in again with a new token.',
+          details: error.message 
+        });
+      }
+      if (error.status === 404) {
+        return res.status(404).json({ error: 'Repository not found on GitHub' });
+      }
+      if (error.status === 422) {
+        return res.status(400).json({ error: 'Invalid folder path or repository state' });
+      }
+      throw error;
+    }
+  } catch (error: any) {
+    console.error('Create folder error:', error);
+    res.status(500).json({ error: 'Failed to create folder', message: error.message });
+  }
+});
+
 // Update content of an existing file in the repository
 router.put('/:projectId/contents/*', authenticate, upload.single('file'), async (req: AuthRequest, res: Response) => {
   try {
