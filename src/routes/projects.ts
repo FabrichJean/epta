@@ -197,6 +197,12 @@ router.get('/search', authenticate, async (req: AuthRequest, res: Response) => {
 
         for (const item of items) {
           const name = (item.name || '').toString();
+          
+          // Skip .gitkeep files in search results
+          if (name === '.gitkeep') {
+            continue;
+          }
+          
           const itemPath = (item.path || '').toString();
           const lower = (name + ' ' + itemPath).toLowerCase();
           if (lower.includes(keyword)) {
@@ -348,7 +354,10 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
       }
 
       // If it's a directory, return list of contents with publicUrl for files
-      const contents = await Promise.all(data.map(async (item: any) => {
+      // Filter out .gitkeep files from the directory listing
+      const filteredData = data.filter((item: any) => item.name !== '.gitkeep');
+      
+      const contents = await Promise.all(filteredData.map(async (item: any) => {
         let publicUrl = null;
         
         // Generate publicUrl only for files, not directories
