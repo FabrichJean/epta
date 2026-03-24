@@ -431,9 +431,17 @@ router.patch('/api-keys/:id/regenerate', authenticate, async (req: AuthRequest, 
   try {
     const userId = req.userId!;
     const apiKeyId = parseInt(req.params.id);
+    const { expiresInDays } = req.body;
 
     if (isNaN(apiKeyId)) {
       return res.status(400).json({ error: 'Invalid API key ID' });
+    }
+
+    // Validate expiresInDays if provided
+    if (expiresInDays !== undefined) {
+      if (typeof expiresInDays !== 'number' || expiresInDays < 1 || expiresInDays > 365) {
+        return res.status(400).json({ error: 'expiresInDays must be between 1 and 365 days' });
+      }
     }
 
     // Check if the API key belongs to the user
@@ -453,12 +461,20 @@ router.patch('/api-keys/:id/regenerate', authenticate, async (req: AuthRequest, 
     const keyHash = hashApiKey(newKey);
     const keyPreview = createApiKeyPreview(newKey);
 
+    // Calculate new expiration date if provided, otherwise keep existing
+    let newExpiresAt = existingApiKey.expiresAt;
+    if (expiresInDays !== undefined) {
+      newExpiresAt = new Date();
+      newExpiresAt.setDate(newExpiresAt.getDate() + expiresInDays);
+    }
+
     // Update the API key with new values
     const updatedApiKey = await prisma.apiKey.update({
       where: { id: apiKeyId },
       data: {
         keyHash,
         keyPreview,
+        expiresAt: newExpiresAt,
         isActive: true, // Reactivate when regenerating
         lastUsedAt: null, // Reset usage tracking
         updatedAt: new Date()
@@ -482,7 +498,8 @@ router.patch('/api-keys/:id/regenerate', authenticate, async (req: AuthRequest, 
         key: newKey, // Only returned once during regeneration
         status: !updatedApiKey.isActive ? 'disabled' : 
                 updatedApiKey.expiresAt < new Date() ? 'expired' : 'active'
-      }
+      },
+      expirationUpdated: expiresInDays !== undefined
     });
 
   } catch (error) {
