@@ -9,6 +9,7 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 import { getUserGithubToken } from '../utils/github.com';
 import { generateShortCode } from '../utils/crypto';
 import { extractProjectId } from '../utils/project';
+import { emitToUser } from '../utils/websocket';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -489,6 +490,189 @@ router.delete('/:projectId/contents/*', authenticate, async (req: AuthRequest, r
   } catch (error: any) {
     console.error('Delete file error:', error);
     res.status(500).json({ error: 'Failed to delete file', message: error.message });
+  }
+});
+
+// Delete multiple files from the GitHub repository with WebSocket progress
+router.delete('/:projectId/contents', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const projectId = await extractProjectId(req);
+    const { paths, operationId } = req.body;
+
+    if (!paths || !Array.isArray(paths) || paths.length === 0) {
+      return res.status(400).json({ error: 'Paths array is required and cannot be empty' });
+    }
+
+    if (paths.length > 100) {
+      return res.status(400).json({ error: 'Cannot delete more than 100 files at once' });
+    }
+
+    // Get user's GitHub token
+    const ghp = await getUserGithubToken(userId);
+    if (!ghp) {
+      return res.status(401).json({ error: 'GitHub token not found. Please re-authenticate.' });
+    }
+
+    // Get project and owner
+    const project = await prisma.project.findFirst({
+      where: { id: projectId },
+      include: { user: { select: { username: true } } }
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const octokit = new Octokit({ auth: ghp });
+    const repoName = (project.metadata as any)?.fullName?.split('/')[1] || project.name;
+    const owner = project.user.username;
+
+    // Define result types
+    type SuccessResult = { path: string; sha?: string; size?: number };
+    type FailedResult = { path: string; error: string; status?: number };
+    type SkippedResult = { path: string; reason: string };
+
+    // Start the bulk delete operation
+    const results = {
+      total: paths.length,
+      successful: [] as SuccessResult[],
+      failed: [] as FailedResult[],
+      skipped: [] as SkippedResult[]
+    };
+
+    // Send initial progress
+    emitToUser(userId, 'bulkDeleteProgress', {
+      operationId,
+      stage: 'starting',
+      progress: 0,
+      total: paths.length,
+      current: 0,
+      results
+    });
+
+    // Process files sequentially to avoid GitHub API rate limits
+    for (let i = 0; i < paths.length; i++) {
+      const path = paths[i];
+      
+      try {
+        // Skip empty paths
+        if (!path || typeof path !== 'string') {
+          results.skipped.push({ path, reason: 'Invalid path' });
+          continue;
+        }
+
+        // Send progress update
+        emitToUser(userId, 'bulkDeleteProgress', {
+          operationId,
+          stage: 'processing',
+          progress: Math.round((i / paths.length) * 100),
+          total: paths.length,
+          current: i + 1,
+          currentFile: path,
+          results
+        });
+
+        // Get file metadata to obtain SHA
+        let fileData: any;
+        try {
+          const { data } = await retry(() => octokit.rest.repos.getContent({ 
+            owner, 
+            repo: repoName, 
+            path 
+          }), 3, 300);
+          fileData = data;
+        } catch (error: any) {
+          if (error.status === 404) {
+            results.skipped.push({ path, reason: 'File not found' });
+            continue;
+          }
+          throw error;
+        }
+
+        if (Array.isArray(fileData)) {
+          results.skipped.push({ path, reason: 'Path is a directory' });
+          continue;
+        }
+
+        const sha = fileData.sha;
+        if (!sha) {
+          results.skipped.push({ path, reason: 'Unable to determine file SHA' });
+          continue;
+        }
+
+        // Delete the file
+        try {
+          const deleteResp = await retry(() => octokit.request('DELETE /repos/{owner}/{repo}/contents/{path}', {
+            owner,
+            repo: repoName,
+            path,
+            message: `Bulk delete: ${path}`,
+            sha
+          }), 3, 300);
+
+          results.successful.push({ 
+            path, 
+            sha: deleteResp.data.commit?.sha,
+            size: fileData.size 
+          });
+        } catch (deleteError: any) {
+          results.failed.push({ 
+            path, 
+            error: deleteError.message || 'Delete operation failed',
+            status: deleteError.status 
+          });
+        }
+
+        // Small delay between deletions to respect GitHub API limits
+        if (i < paths.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+      } catch (error: any) {
+        results.failed.push({ 
+          path, 
+          error: error.message || 'Unexpected error',
+          status: error.status 
+        });
+      }
+    }
+
+    // Send final progress
+    emitToUser(userId, 'bulkDeleteProgress', {
+      operationId,
+      stage: 'completed',
+      progress: 100,
+      total: paths.length,
+      current: paths.length,
+      results
+    });
+
+    return res.json({
+      message: 'Bulk delete operation completed',
+      operationId,
+      summary: {
+        total: results.total,
+        successful: results.successful.length,
+        failed: results.failed.length,
+        skipped: results.skipped.length
+      },
+      results
+    });
+
+  } catch (error: any) {
+    console.error('Bulk delete error:', error);
+    
+    // Send error progress update
+    if (req.body.operationId) {
+      emitToUser(req.userId!, 'bulkDeleteProgress', {
+        operationId: req.body.operationId,
+        stage: 'error',
+        error: error.message || 'Bulk delete operation failed'
+      });
+    }
+    
+    res.status(500).json({ error: 'Failed to perform bulk delete', message: error.message });
   }
 });
 

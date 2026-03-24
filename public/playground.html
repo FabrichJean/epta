@@ -216,6 +216,105 @@
             opacity: 0.6;
             pointer-events: none;
         }
+
+        /* API Key Management Styles */
+        .api-key-section {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: #fafbfc;
+        }
+
+        .api-key-section h4 {
+            color: #333;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 5px;
+        }
+
+        .api-key-display {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            margin: 10px 0;
+            border-left: 4px solid #10b981;
+        }
+
+        .api-key-warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .api-key-table {
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        .api-key-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85em;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .api-key-table th {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .api-key-table td {
+            border: 1px solid #d1d5db;
+            padding: 10px 8px;
+            vertical-align: middle;
+        }
+
+        .api-key-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .api-key-btn {
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 5px;
+            transition: all 0.2s;
+        }
+
+        .api-key-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .api-key-btn.toggle {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .api-key-btn.toggle.enable {
+            background: #10b981;
+        }
+
+        .api-key-btn.delete {
+            background: #dc2626;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -307,6 +406,71 @@
                     </div>
                     <button onclick="getCurrentUser()">Get Me</button>
                     <div id="me-response"></div>
+                </div>
+            </div>
+
+            <!-- API Key Management Section -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                    <span class="endpoint-title">🔑 API Key Management</span>
+                    <span class="method get">MANAGE</span>
+                </div>
+                <div class="endpoint-body">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">API Key Management</h3>
+                    <p style="color: #666; margin-bottom: 20px;">Create and manage API keys for programmatic access to the API. Use API keys as an alternative to JWT tokens.</p>
+                    
+                    <!-- Create API Key -->
+                    <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                        <h4 style="color: #333; margin-bottom: 10px;">Create New API Key</h4>
+                        <div class="form-row">
+                            <label>JWT Token (optional - uses global token if empty):</label>
+                            <input type="text" id="create-apikey-token" placeholder="Leave empty to use global token">
+                        </div>
+                        <div class="form-row">
+                            <label>API Key Name:</label>
+                            <input type="text" id="apikey-name" placeholder="e.g., My App API Key">
+                        </div>
+                        <div class="form-row">
+                            <label>Expires In (days):</label>
+                            <input type="number" id="apikey-expires" value="30" min="1" max="365" placeholder="30">
+                            <small style="color: #666; font-size: 0.85em; display: block; margin-top: 5px;">
+                                💡 Choose between 1-365 days. Shorter expiration periods are more secure.
+                            </small>
+                        </div>
+                        <button onclick="createApiKey()" style="background: linear-gradient(135deg, #10b981, #059669);">Create API Key</button>
+                        <div id="create-apikey-response"></div>
+                    </div>
+
+                    <!-- List API Keys -->
+                    <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                        <h4 style="color: #333; margin-bottom: 10px;">My API Keys</h4>
+                        <div class="form-row">
+                            <label>JWT Token (optional - uses global token if empty):</label>
+                            <input type="text" id="list-apikey-token" placeholder="Leave empty to use global token">
+                        </div>
+                        <button onclick="listApiKeys()" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">Load My API Keys</button>
+                        <div id="list-apikey-response"></div>
+                        <div id="apikey-table" style="margin-top: 15px;"></div>
+                    </div>
+
+                    <!-- Test API Key -->
+                    <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px;">
+                        <h4 style="color: #333; margin-bottom: 10px;">Test API Key</h4>
+                        <p style="color: #666; font-size: 0.9em; margin-bottom: 15px;">
+                            Test your API key by making a request to the /me endpoint. 
+                            <strong>Usage:</strong> Add the <code>X-API-Key</code> header to any API request instead of the <code>Authorization: Bearer</code> header.
+                        </p>
+                        <div style="background: #f3f4f6; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-family: 'Courier New', monospace; font-size: 0.85em;">
+                            <strong>Example cURL:</strong><br>
+                            <code>curl -H "X-API-Key: epta_your_api_key_here" ${getBaseUrl() || 'http://localhost:4000'}/me</code>
+                        </div>
+                        <div class="form-row">
+                            <label>API Key (X-API-Key header):</label>
+                            <input type="text" id="test-apikey" placeholder="epta_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                        </div>
+                        <button onclick="testApiKey()" style="background: linear-gradient(135deg, #f59e0b, #d97706);">Test API Key</button>
+                        <div id="test-apikey-response"></div>
+                    </div>
                 </div>
             </div>
 
@@ -717,6 +881,51 @@
                     <div id="folder-response"></div>
                 </div>
             </div>
+
+            <!-- Bulk Delete Files -->
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                    <span class="endpoint-title">Bulk Delete Files</span>
+                    <span class="method delete">DELETE</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Endpoint:</strong> /projects/{projectId}/contents</p>
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">🔑 Requires Authentication - Delete multiple files with real-time progress via WebSocket</p>
+                    <div class="form-row">
+                        <label>JWT Token (optional - uses global token if empty):</label>
+                        <input type="text" id="bulk-delete-token" placeholder="Leave empty to use global token">
+                    </div>
+                    <div class="form-row">
+                        <label>Project ID (required):</label>
+                        <input type="text" id="bulk-delete-project-id" placeholder="Enter project ID">
+                    </div>
+                    <div class="form-row">
+                        <label>File Paths (one per line):</label>
+                        <textarea id="bulk-delete-paths" rows="6" placeholder="src/file1.js&#10;src/file2.ts&#10;docs/readme.md"></textarea>
+                        <small style="color: #666; font-size: 0.85em; display: block; margin-top: 5px;">
+                            💡 Enter one file path per line. Max 100 files. Progress will be shown below via WebSocket.
+                        </small>
+                    </div>
+                    <div class="form-row">
+                        <label>
+                            <input type="checkbox" id="bulk-delete-confirm" style="margin-right: 8px;">
+                            I understand this will permanently delete the selected files
+                        </label>
+                    </div>
+                    <button onclick="bulkDeleteFiles()" style="background-color: #dc2626;">Bulk Delete Files</button>
+                    <div id="bulk-delete-response"></div>
+                    
+                    <!-- Progress Display -->
+                    <div id="bulk-delete-progress" style="display: none; margin-top: 15px; padding: 10px; background: #f3f4f6; border-radius: 5px;">
+                        <h5 style="margin: 0 0 10px 0;">🔄 Deletion Progress</h5>
+                        <div style="background: #e5e7eb; border-radius: 10px; overflow: hidden; margin-bottom: 10px;">
+                            <div id="bulk-delete-progress-bar" style="height: 20px; background: linear-gradient(90deg, #10b981, #059669); width: 0%; transition: width 0.3s ease;"></div>
+                        </div>
+                        <div id="bulk-delete-status" style="font-size: 0.9em; color: #666;">Preparing...</div>
+                        <div id="bulk-delete-details" style="font-size: 0.85em; margin-top: 5px; max-height: 200px; overflow-y: auto;"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -856,6 +1065,247 @@
                 showResponse('me-response', data, !response.ok);
             } catch (error) {
                 showResponse('me-response', { error: error.message }, true);
+            }
+        }
+
+        // API Key Management Functions
+        async function createApiKey() {
+            const customToken = document.getElementById('create-apikey-token').value.trim();
+            const token = customToken || getToken();
+            const name = document.getElementById('apikey-name').value.trim();
+            const expiresInDays = parseInt(document.getElementById('apikey-expires').value);
+
+            if (!name) {
+                showResponse('create-apikey-response', { error: 'API key name is required' }, true);
+                return;
+            }
+
+            if (!token) {
+                showResponse('create-apikey-response', { error: 'Auth token is required' }, true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${getBaseUrl()}/auth/api-keys`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ name, expiresInDays })
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Show success with special formatting for the API key
+                    const element = document.getElementById('create-apikey-response');
+                    element.innerHTML = `
+                        <div class="response success">
+                            <h4>✅ API Key Created Successfully</h4>
+                            <div style="background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                                <strong>⚠️ Important:</strong> Save this API key now. You will not be able to see it again.
+                            </div>
+                            <div style="background: #1f2937; color: #f9fafb; padding: 15px; border-radius: 8px; font-family: monospace; word-break: break-all; margin: 10px 0;">
+                                <strong>API Key:</strong><br>
+                                <span style="color: #10b981; font-size: 14px;">${data.apiKey}</span>
+                            </div>
+                            <div style="background: #f3f4f6; padding: 10px; border-radius: 5px; font-size: 0.9em;">
+                                <strong>Usage:</strong> Include this key in the <code>X-API-Key</code> header of your requests.
+                            </div>
+                            <pre style="margin-top: 10px;">${JSON.stringify(data.keyInfo, null, 2)}</pre>
+                        </div>
+                    `;
+                    
+                    // Clear form
+                    document.getElementById('apikey-name').value = '';
+                    document.getElementById('apikey-expires').value = '30';
+                    
+                    // Refresh the API keys list if it's loaded
+                    const tableDiv = document.getElementById('apikey-table');
+                    if (tableDiv.innerHTML.trim() !== '') {
+                        listApiKeys();
+                    }
+                } else {
+                    showResponse('create-apikey-response', data, true);
+                }
+            } catch (error) {
+                showResponse('create-apikey-response', { error: error.message }, true);
+            }
+        }
+
+        async function listApiKeys() {
+            const customToken = document.getElementById('list-apikey-token').value.trim();
+            const token = customToken || getToken();
+
+            if (!token) {
+                showResponse('list-apikey-response', { error: 'Auth token is required' }, true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${getBaseUrl()}/auth/api-keys`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResponse('list-apikey-response', {
+                        message: `Found ${data.total} API keys (${data.active} active)`,
+                        summary: { total: data.total, active: data.active }
+                    });
+                    
+                    // Display API keys in a table
+                    const tableDiv = document.getElementById('apikey-table');
+                    if (data.apiKeys.length > 0) {
+                        let tableHtml = `
+                            <h5 style="color: #333; margin-bottom: 10px;">API Keys Table</h5>
+                            <div class="api-key-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Key Preview</th>
+                                            <th>Status</th>
+                                            <th>Expires</th>
+                                            <th>Last Used</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+                        
+                        data.apiKeys.forEach(key => {
+                            const statusColor = key.status === 'active' ? '#10b981' : 
+                                              key.status === 'expired' ? '#f59e0b' : '#6b7280';
+                            const statusIcon = key.status === 'active' ? '🟢' : 
+                                             key.status === 'expired' ? '🟡' : '🔴';
+                            
+                            tableHtml += `
+                                <tr>
+                                    <td><strong>${key.name}</strong></td>
+                                    <td style="font-family: 'Courier New', monospace; font-size: 0.8em; color: #6b7280;">${key.keyPreview}</td>
+                                    <td style="color: ${statusColor}; font-weight: 600;">${statusIcon} ${key.status}</td>
+                                    <td>${new Date(key.expiresAt).toLocaleDateString()}</td>
+                                    <td>${key.lastUsedAt ? new Date(key.lastUsedAt).toLocaleDateString() : '<span style="color: #9ca3af;">Never</span>'}</td>
+                                    <td>
+                                        <button onclick="toggleApiKey(${key.id})" 
+                                                class="api-key-btn toggle ${key.isActive ? '' : 'enable'}">
+                                            ${key.isActive ? 'Disable' : 'Enable'}
+                                        </button>
+                                        <button onclick="deleteApiKey(${key.id}, '${key.name.replace(/'/g, '\\\'')}')" 
+                                                class="api-key-btn delete">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        
+                        tableHtml += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                        tableDiv.innerHTML = tableHtml;
+                    } else {
+                        tableDiv.innerHTML = '<p style="color: #666; font-style: italic; text-align: center; padding: 20px;">No API keys found. Create your first API key above.</p>';
+                    }
+                } else {
+                    showResponse('list-apikey-response', data, true);
+                }
+            } catch (error) {
+                showResponse('list-apikey-response', { error: error.message }, true);
+            }
+        }
+
+        async function toggleApiKey(apiKeyId) {
+            const customToken = document.getElementById('list-apikey-token').value.trim();
+            const token = customToken || getToken();
+
+            if (!token) {
+                alert('Auth token is required');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${getBaseUrl()}/auth/api-keys/${apiKeyId}/toggle`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Refresh the API keys list
+                    listApiKeys();
+                } else {
+                    alert('Failed to toggle API key: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Failed to toggle API key: ' + error.message);
+            }
+        }
+
+        async function deleteApiKey(apiKeyId, keyName) {
+            if (!confirm(`Are you sure you want to delete the API key "${keyName}"? This action cannot be undone.`)) {
+                return;
+            }
+
+            const customToken = document.getElementById('list-apikey-token').value.trim();
+            const token = customToken || getToken();
+
+            if (!token) {
+                alert('Auth token is required');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${getBaseUrl()}/auth/api-keys/${apiKeyId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Refresh the API keys list
+                    listApiKeys();
+                } else {
+                    alert('Failed to delete API key: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Failed to delete API key: ' + error.message);
+            }
+        }
+
+        async function testApiKey() {
+            const apiKey = document.getElementById('test-apikey').value.trim();
+
+            if (!apiKey) {
+                showResponse('test-apikey-response', { error: 'API key is required' }, true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${getBaseUrl()}/me`, {
+                    headers: { 'X-API-Key': apiKey }
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    const element = document.getElementById('test-apikey-response');
+                    element.innerHTML = `
+                        <div class="response success">
+                            <h4>✅ API Key Valid</h4>
+                            <div style="background: #d1fae5; border: 1px solid #10b981; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                                <strong>Success:</strong> API key is valid and active. Authenticated as <strong>${data.name || data.username || 'Unknown'}</strong>
+                            </div>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    showResponse('test-apikey-response', data, true);
+                }
+            } catch (error) {
+                showResponse('test-apikey-response', { error: error.message }, true);
             }
         }
 
@@ -1310,6 +1760,189 @@
             } catch (error) {
                 console.error('Create folder error:', error);
                 showResponse('folder-response', { error: 'Request failed', details: error.message }, true);
+            }
+        }
+
+        // WebSocket connection for real-time progress
+        let socket = null;
+        let isSocketConnected = false;
+
+        function initializeWebSocket() {
+            const token = getToken();
+            if (!token) {
+                console.warn('No token available for WebSocket connection');
+                return;
+            }
+
+            if (socket && isSocketConnected) {
+                return socket;
+            }
+
+            try {
+                // Import socket.io client from CDN
+                const script = document.createElement('script');
+                script.src = 'https://cdn.socket.io/4.7.4/socket.io.min.js';
+                script.onload = () => {
+                    socket = io({
+                        auth: {
+                            token: token
+                        }
+                    });
+
+                    socket.on('connect', () => {
+                        console.log('WebSocket connected');
+                        isSocketConnected = true;
+                    });
+
+                    socket.on('disconnect', () => {
+                        console.log('WebSocket disconnected');
+                        isSocketConnected = false;
+                    });
+
+                    socket.on('bulkDeleteProgress', (data) => {
+                        updateBulkDeleteProgress(data);
+                    });
+
+                    socket.on('connect_error', (error) => {
+                        console.error('WebSocket connection error:', error);
+                        isSocketConnected = false;
+                    });
+                };
+                document.head.appendChild(script);
+            } catch (error) {
+                console.error('Failed to initialize WebSocket:', error);
+            }
+        }
+
+        function updateBulkDeleteProgress(data) {
+            const progressDiv = document.getElementById('bulk-delete-progress');
+            const progressBar = document.getElementById('bulk-delete-progress-bar');
+            const statusDiv = document.getElementById('bulk-delete-status');
+            const detailsDiv = document.getElementById('bulk-delete-details');
+
+            progressDiv.style.display = 'block';
+
+            switch (data.stage) {
+                case 'starting':
+                    progressBar.style.width = '0%';
+                    statusDiv.textContent = 'Starting bulk delete operation...';
+                    detailsDiv.innerHTML = '<div style="color: #3b82f6;">⏳ Initializing...</div>';
+                    break;
+
+                case 'processing':
+                    progressBar.style.width = `${data.progress}%`;
+                    statusDiv.textContent = `Processing file ${data.current} of ${data.total} (${data.progress}%)`;
+                    if (data.currentFile) {
+                        detailsDiv.innerHTML += `<div style="color: #6b7280;">🔄 Deleting: ${data.currentFile}</div>`;
+                        // Auto-scroll to bottom
+                        detailsDiv.scrollTop = detailsDiv.scrollHeight;
+                    }
+                    break;
+
+                case 'completed':
+                    progressBar.style.width = '100%';
+                    progressBar.style.background = 'linear-gradient(90deg, #10b981, #059669)';
+                    statusDiv.textContent = `✅ Completed! ${data.results.successful.length} deleted, ${data.results.failed.length} failed, ${data.results.skipped.length} skipped`;
+                    
+                    let summary = '<div style="margin-top: 10px;"><strong>📊 Summary:</strong></div>';
+                    if (data.results.successful.length > 0) {
+                        summary += `<div style="color: #10b981;">✅ Successfully deleted: ${data.results.successful.length} files</div>`;
+                    }
+                    if (data.results.failed.length > 0) {
+                        summary += `<div style="color: #dc2626;">❌ Failed: ${data.results.failed.length} files</div>`;
+                        data.results.failed.forEach(item => {
+                            summary += `<div style="color: #dc2626; font-size: 0.8em; margin-left: 15px;">• ${item.path}: ${item.error}</div>`;
+                        });
+                    }
+                    if (data.results.skipped.length > 0) {
+                        summary += `<div style="color: #f59e0b;">⚠️ Skipped: ${data.results.skipped.length} files</div>`;
+                        data.results.skipped.forEach(item => {
+                            summary += `<div style="color: #f59e0b; font-size: 0.8em; margin-left: 15px;">• ${item.path}: ${item.reason}</div>`;
+                        });
+                    }
+                    detailsDiv.innerHTML += summary;
+                    break;
+
+                case 'error':
+                    progressBar.style.background = 'linear-gradient(90deg, #dc2626, #b91c1c)';
+                    statusDiv.textContent = '❌ Operation failed';
+                    detailsDiv.innerHTML += `<div style="color: #dc2626;">🚨 Error: ${data.error}</div>`;
+                    break;
+            }
+        }
+
+        // Bulk delete files function
+        async function bulkDeleteFiles() {
+            const customToken = document.getElementById('bulk-delete-token').value.trim();
+            const token = customToken || getToken();
+            const projectId = document.getElementById('bulk-delete-project-id').value.trim();
+            const pathsText = document.getElementById('bulk-delete-paths').value.trim();
+            const confirmed = document.getElementById('bulk-delete-confirm').checked;
+
+            if (!projectId || !pathsText) {
+                showResponse('bulk-delete-response', { error: 'Project ID and file paths are required' }, true);
+                return;
+            }
+
+            if (!confirmed) {
+                showResponse('bulk-delete-response', { error: 'Please confirm that you want to delete the files' }, true);
+                return;
+            }
+
+            if (!token) {
+                showResponse('bulk-delete-response', { error: 'Auth token is required' }, true);
+                return;
+            }
+
+            // Parse paths from textarea
+            const paths = pathsText.split('\n')
+                .map(path => path.trim())
+                .filter(path => path.length > 0);
+
+            if (paths.length === 0) {
+                showResponse('bulk-delete-response', { error: 'No valid file paths provided' }, true);
+                return;
+            }
+
+            if (paths.length > 100) {
+                showResponse('bulk-delete-response', { error: 'Cannot delete more than 100 files at once' }, true);
+                return;
+            }
+
+            // Initialize WebSocket if not already done
+            initializeWebSocket();
+
+            // Generate unique operation ID
+            const operationId = 'bulkdelete_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+            // Reset progress display
+            document.getElementById('bulk-delete-progress').style.display = 'none';
+            document.getElementById('bulk-delete-details').innerHTML = '';
+
+            try {
+                const response = await fetch(`${getBaseUrl()}/projects/${projectId}/contents`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        paths: paths,
+                        operationId: operationId
+                    })
+                });
+
+                const result = await response.json();
+                showResponse('bulk-delete-response', result, !response.ok);
+
+                if (response.ok) {
+                    // Clear form on success
+                    document.getElementById('bulk-delete-paths').value = '';
+                    document.getElementById('bulk-delete-confirm').checked = false;
+                }
+            } catch (error) {
+                console.error('Bulk delete error:', error);
+                showResponse('bulk-delete-response', { error: 'Request failed', details: error.message }, true);
             }
         }
     </script>

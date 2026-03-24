@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client';
 import { Octokit } from '@octokit/rest';
 import { encryptToken, decryptToken } from '../utils/crypto';
 import { authenticate, AuthRequest } from '../middleware/auth';
+import { generateApiKey, hashApiKey, createApiKeyPreview } from '../utils/apiKey';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -220,6 +221,209 @@ router.put('/update-token', authenticate, async (req: AuthRequest, res: Response
 
 router.get('/', authenticate, (req: AuthRequest, res: Response) => {
   res.status(200).json(req.user)
-})
+});
+
+// Create API Key
+router.post('/api-keys', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const { name, expiresInDays } = req.body;
+
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return res.status(400).json({ error: 'API key name is required' });
+    }
+
+    if (!expiresInDays || typeof expiresInDays !== 'number' || expiresInDays < 1 || expiresInDays > 365) {
+      return res.status(400).json({ error: 'expiresInDays must be between 1 and 365 days' });
+    }
+
+    // Check if user already has 10 active API keys (limit)
+    const existingKeysCount = await prisma.apiKey.count({
+      where: {
+        userId,
+        isActive: true,
+        expiresAt: {
+          gt: new Date()
+        }
+      }
+    });
+
+    if (existingKeysCount >= 10) {
+      return res.status(400).json({ error: 'Maximum of 10 active API keys allowed. Please delete some existing keys.' });
+    }
+
+    // Generate API key
+    const apiKey = generateApiKey();
+    const keyHash = hashApiKey(apiKey);
+    const keyPreview = createApiKeyPreview(apiKey);
+    
+    // Calculate expiration date
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + expiresInDays);
+
+    // Create API key record
+    const createdApiKey = await prisma.apiKey.create({
+      data: {
+        name: name.trim(),
+        keyHash,
+        keyPreview,
+        userId,
+        expiresAt,
+      },
+      select: {
+        id: true,
+        name: true,
+        keyPreview: true,
+        expiresAt: true,
+        isActive: true,
+        createdAt: true,
+        lastUsedAt: true,
+      }
+    });
+
+    res.status(201).json({
+      message: 'API key created successfully',
+      apiKey: apiKey, // Return the full key only once
+      keyInfo: createdApiKey,
+      warning: 'Save this API key now. You will not be able to see it again.'
+    });
+
+  } catch (error) {
+    console.error('Create API key error:', error);
+    res.status(500).json({ error: 'Failed to create API key' });
+  }
+});
+
+// Get all API keys for the user
+router.get('/api-keys', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+
+    const apiKeys = await prisma.apiKey.findMany({
+      where: { userId },
+      select: {
+        id: true,
+        name: true,
+        keyPreview: true,
+        expiresAt: true,
+        isActive: true,
+        lastUsedAt: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // Add status information
+    const keysWithStatus = apiKeys.map(key => ({
+      ...key,
+      status: !key.isActive ? 'disabled' : 
+              key.expiresAt < new Date() ? 'expired' : 'active'
+    }));
+
+    res.json({
+      apiKeys: keysWithStatus,
+      total: apiKeys.length,
+      active: keysWithStatus.filter(k => k.status === 'active').length
+    });
+
+  } catch (error) {
+    console.error('Get API keys error:', error);
+    res.status(500).json({ error: 'Failed to fetch API keys' });
+  }
+});
+
+// Delete an API key
+router.delete('/api-keys/:id', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const apiKeyId = parseInt(req.params.id);
+
+    if (isNaN(apiKeyId)) {
+      return res.status(400).json({ error: 'Invalid API key ID' });
+    }
+
+    // Check if the API key belongs to the user
+    const apiKey = await prisma.apiKey.findFirst({
+      where: {
+        id: apiKeyId,
+        userId
+      }
+    });
+
+    if (!apiKey) {
+      return res.status(404).json({ error: 'API key not found' });
+    }
+
+    // Delete the API key
+    await prisma.apiKey.delete({
+      where: { id: apiKeyId }
+    });
+
+    res.json({
+      message: 'API key deleted successfully',
+      deletedKey: {
+        id: apiKey.id,
+        name: apiKey.name,
+        keyPreview: apiKey.keyPreview
+      }
+    });
+
+  } catch (error) {
+    console.error('Delete API key error:', error);
+    res.status(500).json({ error: 'Failed to delete API key' });
+  }
+});
+
+// Disable/Enable an API key
+router.patch('/api-keys/:id/toggle', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const apiKeyId = parseInt(req.params.id);
+
+    if (isNaN(apiKeyId)) {
+      return res.status(400).json({ error: 'Invalid API key ID' });
+    }
+
+    // Check if the API key belongs to the user
+    const apiKey = await prisma.apiKey.findFirst({
+      where: {
+        id: apiKeyId,
+        userId
+      }
+    });
+
+    if (!apiKey) {
+      return res.status(404).json({ error: 'API key not found' });
+    }
+
+    // Toggle the active status
+    const updatedApiKey = await prisma.apiKey.update({
+      where: { id: apiKeyId },
+      data: { isActive: !apiKey.isActive },
+      select: {
+        id: true,
+        name: true,
+        keyPreview: true,
+        isActive: true,
+        expiresAt: true,
+        lastUsedAt: true,
+        createdAt: true,
+      }
+    });
+
+    res.json({
+      message: `API key ${updatedApiKey.isActive ? 'enabled' : 'disabled'} successfully`,
+      apiKey: {
+        ...updatedApiKey,
+        status: !updatedApiKey.isActive ? 'disabled' : 
+                updatedApiKey.expiresAt < new Date() ? 'expired' : 'active'
+      }
+    });
+
+  } catch (error) {
+    console.error('Toggle API key error:', error);
+    res.status(500).json({ error: 'Failed to toggle API key status' });
+  }
+});
 
 export default router;
