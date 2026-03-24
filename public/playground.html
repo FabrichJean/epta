@@ -311,6 +311,11 @@
             background: #10b981;
         }
 
+        .api-key-btn.regenerate {
+            background: #f59e0b;
+            color: white;
+        }
+
         .api-key-btn.delete {
             background: #dc2626;
             color: white;
@@ -417,7 +422,7 @@
                 </div>
                 <div class="endpoint-body">
                     <h3 style="color: #667eea; margin-bottom: 15px;">API Key Management</h3>
-                    <p style="color: #666; margin-bottom: 20px;">Create and manage API keys for programmatic access to the API. Use API keys as an alternative to JWT tokens.</p>
+                    <p style="color: #666; margin-bottom: 20px;">Create and manage API keys for programmatic access to the API. Use API keys as an alternative to JWT tokens. You can create, list, enable/disable, regenerate, and delete API keys.</p>
                     
                     <!-- Create API Key -->
                     <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
@@ -1192,6 +1197,10 @@
                                                 class="api-key-btn toggle ${key.isActive ? '' : 'enable'}">
                                             ${key.isActive ? 'Disable' : 'Enable'}
                                         </button>
+                                        <button onclick="regenerateApiKey(${key.id})" 
+                                                class="api-key-btn regenerate">
+                                            Regenerate
+                                        </button>
                                         <button onclick="deleteApiKey(${key.id}, '${key.name.replace(/'/g, '\\\'')}')" 
                                                 class="api-key-btn delete">
                                             Delete
@@ -1242,6 +1251,62 @@
                 }
             } catch (error) {
                 alert('Failed to toggle API key: ' + error.message);
+            }
+        }
+
+        async function regenerateApiKey(apiKeyId) {
+            if (!confirm('Are you sure you want to regenerate this API key? The old key will stop working immediately.')) {
+                return;
+            }
+
+            const customToken = document.getElementById('list-apikey-token').value.trim();
+            const token = customToken || getToken();
+
+            if (!token) {
+                alert('Auth token is required');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${getBaseUrl()}/auth/api-keys/${apiKeyId}/regenerate`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Show the new API key in a modal or alert (only shown once)
+                    const modal = document.createElement('div');
+                    modal.style.cssText = `
+                        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                        background: rgba(0,0,0,0.5); z-index: 1000; display: flex; 
+                        align-items: center; justify-content: center;
+                    `;
+                    modal.innerHTML = `
+                        <div style="background: white; padding: 30px; border-radius: 10px; max-width: 600px; margin: 20px;">
+                            <h3 style="color: #059669; margin-bottom: 15px;">🔄 API Key Regenerated Successfully!</h3>
+                            <p style="margin-bottom: 15px; color: #374151;"><strong>Important:</strong> Copy this key now. You won't be able to see it again!</p>
+                            <div style="background: #f3f4f6; padding: 15px; border-radius: 5px; margin: 15px 0; font-family: 'Courier New', monospace; word-break: break-all; border: 2px solid #10b981;">
+                                <strong>${data.apiKey.key}</strong>
+                            </div>
+                            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                                <button onclick="navigator.clipboard.writeText('${data.apiKey.key}'); alert('API key copied to clipboard!')" 
+                                        style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer;">
+                                    📋 Copy Key
+                                </button>
+                                <button onclick="document.body.removeChild(this.closest('div').closest('div')); listApiKeys();" 
+                                        style="background: #6b7280; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer;">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                } else {
+                    alert('Failed to regenerate API key: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Failed to regenerate API key: ' + error.message);
             }
         }
 

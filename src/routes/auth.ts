@@ -426,4 +426,69 @@ router.patch('/api-keys/:id/toggle', authenticate, async (req: AuthRequest, res:
   }
 });
 
+// Regenerate an API key
+router.patch('/api-keys/:id/regenerate', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const apiKeyId = parseInt(req.params.id);
+
+    if (isNaN(apiKeyId)) {
+      return res.status(400).json({ error: 'Invalid API key ID' });
+    }
+
+    // Check if the API key belongs to the user
+    const existingApiKey = await prisma.apiKey.findFirst({
+      where: {
+        id: apiKeyId,
+        userId
+      }
+    });
+
+    if (!existingApiKey) {
+      return res.status(404).json({ error: 'API key not found' });
+    }
+
+    // Generate new API key
+    const newKey = generateApiKey();
+    const keyHash = hashApiKey(newKey);
+    const keyPreview = createApiKeyPreview(newKey);
+
+    // Update the API key with new values
+    const updatedApiKey = await prisma.apiKey.update({
+      where: { id: apiKeyId },
+      data: {
+        keyHash,
+        keyPreview,
+        isActive: true, // Reactivate when regenerating
+        lastUsedAt: null, // Reset usage tracking
+        updatedAt: new Date()
+      },
+      select: {
+        id: true,
+        name: true,
+        keyPreview: true,
+        isActive: true,
+        expiresAt: true,
+        lastUsedAt: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+
+    res.json({
+      message: 'API key regenerated successfully',
+      apiKey: {
+        ...updatedApiKey,
+        key: newKey, // Only returned once during regeneration
+        status: !updatedApiKey.isActive ? 'disabled' : 
+                updatedApiKey.expiresAt < new Date() ? 'expired' : 'active'
+      }
+    });
+
+  } catch (error) {
+    console.error('Regenerate API key error:', error);
+    res.status(500).json({ error: 'Failed to regenerate API key' });
+  }
+});
+
 export default router;
