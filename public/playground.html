@@ -12,55 +12,62 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: #fafbfc;
             min-height: 100vh;
-            padding: 20px;
+            padding: 16px;
+            color: #24292f;
+            line-height: 1.5;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            padding: 30px;
+            border: 1px solid #d1d9e0;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 24px;
         }
 
         h1 {
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 2.5em;
+            color: #24292f;
+            margin-bottom: 8px;
+            font-size: 1.75rem;
+            font-weight: 600;
         }
 
         .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 1.1em;
+            color: #656d76;
+            margin-bottom: 24px;
+            font-size: 0.875rem;
         }
 
         .config-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
+            background: #f6f8fa;
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 24px;
+            border: 1px solid #d1d9e0;
         }
 
         .config-section h2 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 1.3em;
+            color: #24292f;
+            margin-bottom: 12px;
+            font-size: 1rem;
+            font-weight: 600;
         }
 
         .input-group {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         label {
             display: block;
-            margin-bottom: 5px;
-            color: #555;
-            font-weight: 600;
+            margin-bottom: 4px;
+            color: #24292f;
+            font-weight: 500;
+            font-size: 0.875rem;
         }
 
         input[type="text"],
@@ -68,41 +75,42 @@
         input[type="file"],
         textarea {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.3s;
+            padding: 8px 12px;
+            border: 1px solid #d1d9e0;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: border-color 0.2s ease;
+            background: white;
         }
 
         input[type="text"]:focus,
         input[type="password"]:focus,
         textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #0969da;
+            box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.1);
         }
 
         .endpoints {
             display: grid;
-            gap: 20px;
+            gap: 12px;
         }
 
         .endpoint {
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
+            border: 1px solid #d1d9e0;
+            border-radius: 6px;
             overflow: hidden;
-            transition: all 0.3s;
+            transition: border-color 0.2s ease;
         }
 
         .endpoint:hover {
-            border-color: #667eea;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+            border-color: #8c959f;
         }
 
         .endpoint-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #24292f;
             color: white;
-            padding: 15px 20px;
+            padding: 12px 16px;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
@@ -110,37 +118,42 @@
         }
 
         .endpoint-title {
-            font-size: 1.1em;
-            font-weight: 600;
+            font-size: 0.875rem;
+            font-weight: 500;
         }
 
         .method {
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
         }
 
         .method.post {
-            background: #28a745;
+            background: #0969da;
+            color: white;
         }
 
         .method.get {
-            background: #007bff;
+            background: #1f883d;
+            color: white;
         }
 
         .method.put {
-            background: #ffc107;
-            color: #333;
+            background: #fb8500;
+            color: white;
         }
 
         .method.delete {
-            background: #dc3545;
+            background: #cf222e;
+            color: white;
         }
 
         .endpoint-body {
-            padding: 20px;
+            padding: 16px;
             display: none;
+            background: #fafbfc;
         }
 
         .endpoint-body.active {
@@ -148,68 +161,72 @@
         }
 
         .form-row {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #0969da;
             color: white;
             border: none;
-            padding: 12px 30px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: background-color 0.2s ease;
         }
 
         button:hover {
-            transform: translateY(-2px);
+            background: #0550ae;
         }
 
         button:active {
-            transform: translateY(0);
+            background: #033d8b;
         }
 
         .response {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            background: #f8f9fa;
-            border-left: 4px solid #667eea;
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 6px;
+            background: #f6f8fa;
+            border-left: 3px solid #0969da;
+            font-size: 0.875rem;
         }
 
         .response h4 {
-            margin-bottom: 10px;
-            color: #333;
+            margin-bottom: 8px;
+            color: #24292f;
+            font-size: 0.875rem;
+            font-weight: 600;
         }
 
         .response pre {
-            background: #2d2d2d;
-            color: #f8f8f2;
-            padding: 15px;
-            border-radius: 5px;
+            background: #24292f;
+            color: #f0f6fc;
+            padding: 12px;
+            border-radius: 6px;
             overflow-x: auto;
-            font-size: 13px;
-            line-height: 1.5;
+            font-size: 0.75rem;
+            line-height: 1.45;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
         }
 
         .token-display {
-            background: #e7f3ff;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
+            background: #dbeafe;
+            padding: 8px;
+            border-radius: 6px;
+            margin-top: 8px;
             word-break: break-all;
-            font-family: monospace;
-            font-size: 12px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            font-size: 0.75rem;
         }
 
         .success {
-            border-left-color: #28a745;
+            border-left-color: #1f883d;
         }
 
         .error {
-            border-left-color: #dc3545;
+            border-left-color: #cf222e;
         }
 
         .loading {
@@ -219,123 +236,142 @@
 
         /* API Key Management Styles */
         .api-key-section {
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            background: #fafbfc;
+            border: 1px solid #d1d9e0;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 16px;
+            background: white;
         }
 
         .api-key-section h4 {
-            color: #333;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #e0e0e0;
-            padding-bottom: 5px;
+            color: #24292f;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #d1d9e0;
+            padding-bottom: 4px;
+            font-size: 0.875rem;
+            font-weight: 600;
         }
 
         .api-key-display {
-            background: #1f2937;
-            color: #f9fafb;
-            padding: 15px;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
+            background: #24292f;
+            color: #f0f6fc;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
             word-break: break-all;
-            margin: 10px 0;
-            border-left: 4px solid #10b981;
+            margin: 8px 0;
+            border-left: 3px solid #1f883d;
+            font-size: 0.75rem;
         }
 
         .api-key-warning {
-            background: #fef3c7;
-            border: 1px solid #f59e0b;
-            color: #92400e;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 10px 0;
+            background: #fff8e1;
+            border: 1px solid #fb8500;
+            color: #7d2d00;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 8px 0;
+            font-size: 0.875rem;
         }
 
         .api-key-table {
             overflow-x: auto;
-            margin-top: 15px;
+            margin-top: 12px;
         }
 
         .api-key-table table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.85em;
+            font-size: 0.75rem;
             background: white;
-            border-radius: 8px;
+            border-radius: 6px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid #d1d9e0;
         }
 
         .api-key-table th {
-            background: #f3f4f6;
-            border: 1px solid #d1d5db;
-            padding: 12px 8px;
+            background: #f6f8fa;
+            border: 1px solid #d1d9e0;
+            padding: 8px;
             text-align: left;
             font-weight: 600;
-            color: #374151;
+            color: #24292f;
+            font-size: 0.75rem;
         }
 
         .api-key-table td {
-            border: 1px solid #d1d5db;
-            padding: 10px 8px;
+            border: 1px solid #d1d9e0;
+            padding: 8px;
             vertical-align: middle;
         }
 
         .api-key-table tr:hover {
-            background: #f9fafb;
+            background: #f6f8fa;
         }
 
         .api-key-btn {
             border: none;
-            padding: 6px 12px;
+            padding: 4px 8px;
             border-radius: 4px;
-            font-size: 0.75em;
-            font-weight: 600;
+            font-size: 0.75rem;
+            font-weight: 500;
             cursor: pointer;
-            margin-right: 5px;
-            transition: all 0.2s;
+            margin-right: 4px;
+            transition: background-color 0.2s ease;
         }
 
         .api-key-btn:hover {
-            transform: translateY(-1px);
+            opacity: 0.9;
         }
 
         .api-key-btn.toggle {
-            background: #f59e0b;
+            background: #fb8500;
             color: white;
         }
 
         .api-key-btn.toggle.enable {
-            background: #10b981;
+            background: #1f883d;
+            color: white;
         }
 
         .api-key-btn.regenerate {
-            background: #f59e0b;
+            background: #fb8500;
             color: white;
         }
 
         .api-key-btn.delete {
-            background: #dc2626;
+            background: #cf222e;
             color: white;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🚀 API Playground</h1>
+        <h1>API Playground</h1>
         <p class="subtitle">Test all endpoints of the EPTA API</p>
 
         <div class="config-section">
-            <h2>⚙️ Configuration</h2>
+            <h2>Configuration</h2>
             <div class="input-group">
                 <label for="baseUrl">Base URL:</label>
                 <input type="text" id="baseUrl" value="http://localhost:4000" placeholder="http://localhost:4000">
             </div>
-            <div class="input-group">
-                <label for="token">JWT Token (Auto-filled after login/register):</label>
-                <input type="text" id="token" placeholder="Your JWT token will appear here">
+            <div style="display: flex; gap: 16px;">
+                <div style="flex: 1;">
+                    <div class="input-group">
+                        <label for="token">JWT Token (Auto-filled after login/register):</label>
+                        <input type="text" id="token" placeholder="Your JWT token will appear here">
+                    </div>
+                </div>
+                <div style="flex: 1;">
+                    <div class="input-group">
+                        <label for="apiKey">API Key (Alternative to JWT Token):</label>
+                        <input type="text" id="apiKey" placeholder="epta_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                    </div>
+                </div>
+            </div>
+            <div style="background: #dbeafe; padding: 8px; border-radius: 6px; margin-top: 8px; font-size: 0.75rem; color: #1e40af; border: 1px solid #93c5fd;">
+                <strong>Authentication:</strong> Use either JWT Token (from login/register) or API Key (from API Key Management). API Keys will be prioritized if both are provided.
             </div>
         </div>
 
@@ -382,7 +418,7 @@
                 </div>
                 <div class="endpoint-body">
                     <p><strong>Endpoint:</strong> /auth/update-token</p>
-                    <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">🔑 Requires Authentication - Updates your stored GitHub token</p>
+                    <p style="color: #656d76; font-size: 0.75rem; margin-bottom: 8px;">Requires Authentication - Updates your stored GitHub token</p>
                     <div class="form-row">
                         <label>JWT Token (optional - uses global token if empty):</label>
                         <input type="text" id="update-ghp-token" placeholder="Leave empty to use global token">
@@ -407,7 +443,7 @@
                     <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">🔑 Requires Authentication</p>
                     <div class="form-row">
                         <label>JWT Token (optional - uses global token if empty):</label>
-                        <input type="text" id="me-token" placeholder="Leave empty to use global token">
+                        <input type="text" id="me-token" placeholder="Leave empty to use global JWT token or API key">
                     </div>
                     <button onclick="getCurrentUser()">Get Me</button>
                     <div id="me-response"></div>
@@ -422,14 +458,14 @@
                 </div>
                 <div class="endpoint-body">
                     <h3 style="color: #667eea; margin-bottom: 15px;">API Key Management</h3>
-                    <p style="color: #666; margin-bottom: 20px;">Create and manage API keys for programmatic access to the API. Use API keys as an alternative to JWT tokens. You can create, list, enable/disable, regenerate (with optional expiration update), and delete API keys.</p>
+                    <p style="color: #666; margin-bottom: 20px;">Create and manage API keys for programmatic access to the API. Use API keys as an alternative to JWT tokens. You can create, list, enable/disable, regenerate (with optional expiration update), and delete API keys. <strong>Note:</strong> You can use either JWT tokens or API keys throughout this playground - API keys will be prioritized if both are provided.</p>
                     
                     <!-- Create API Key -->
                     <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
                         <h4 style="color: #333; margin-bottom: 10px;">Create New API Key</h4>
                         <div class="form-row">
-                            <label>JWT Token (optional - uses global token if empty):</label>
-                            <input type="text" id="create-apikey-token" placeholder="Leave empty to use global token">
+                            <label>JWT Token (optional - uses global token/API key if empty):</label>
+                            <input type="text" id="create-apikey-token" placeholder="Leave empty to use global JWT token or API key">
                         </div>
                         <div class="form-row">
                             <label>API Key Name:</label>
@@ -450,8 +486,8 @@
                     <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
                         <h4 style="color: #333; margin-bottom: 10px;">My API Keys</h4>
                         <div class="form-row">
-                            <label>JWT Token (optional - uses global token if empty):</label>
-                            <input type="text" id="list-apikey-token" placeholder="Leave empty to use global token">
+                            <label>JWT Token (optional - uses global token/API key if empty):</label>
+                            <input type="text" id="list-apikey-token" placeholder="Leave empty to use global JWT token or API key">
                         </div>
                         <button onclick="listApiKeys()" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">Load My API Keys</button>
                         <div id="list-apikey-response"></div>
@@ -464,6 +500,7 @@
                         <p style="color: #666; font-size: 0.9em; margin-bottom: 15px;">
                             Test your API key by making a request to the /me endpoint. 
                             <strong>Usage:</strong> Add the <code>X-API-Key</code> header to any API request instead of the <code>Authorization: Bearer</code> header.
+                            <br><strong>Tip:</strong> You can also set your API key in the global configuration above to use it automatically in all requests.
                         </p>
                         <div style="background: #f3f4f6; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-family: 'Courier New', monospace; font-size: 0.85em;">
                             <strong>Example cURL:</strong><br>
@@ -507,7 +544,7 @@
                     <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">🔑 Requires Authentication</p>
                     <div class="form-row">
                         <label>JWT Token (optional - uses global token if empty):</label>
-                        <input type="text" id="create-token" placeholder="Leave empty to use global token">
+                        <input type="text" id="create-token" placeholder="Leave empty to use global JWT token or API key">
                     </div>
                     <div class="form-row">
                         <label>Project Name:</label>
@@ -951,6 +988,23 @@
             return tokenInput.value.trim();
         }
 
+        function getApiKey() {
+            return document.getElementById('apiKey').value.trim();
+        }
+
+        function getAuthHeaders(customToken = null, customApiKey = null) {
+            const token = customToken || getToken();
+            const apiKey = customApiKey || getApiKey();
+            
+            if (apiKey) {
+                return { 'X-API-Key': apiKey };
+            } else if (token) {
+                return { 'Authorization': `Bearer ${token}` };
+            } else {
+                return {};
+            }
+        }
+
         function setToken(token) {
             tokenInput.value = token;
         }
@@ -1061,10 +1115,16 @@
 
         async function getCurrentUser() {
             const customToken = document.getElementById('me-token').value.trim();
-            const token = customToken || getToken();
+            const authHeaders = getAuthHeaders(customToken);
+            
+            if (Object.keys(authHeaders).length === 0) {
+                showResponse('me-response', { error: 'JWT Token or API Key is required' }, true);
+                return;
+            }
+            
             try {
                 const response = await fetch(`${getBaseUrl()}/me`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: authHeaders
                 });
                 const data = await response.json();
                 showResponse('me-response', data, !response.ok);
@@ -1076,17 +1136,17 @@
         // API Key Management Functions
         async function createApiKey() {
             const customToken = document.getElementById('create-apikey-token').value.trim();
-            const token = customToken || getToken();
             const name = document.getElementById('apikey-name').value.trim();
             const expiresInDays = parseInt(document.getElementById('apikey-expires').value);
+            const authHeaders = getAuthHeaders(customToken);
 
             if (!name) {
                 showResponse('create-apikey-response', { error: 'API key name is required' }, true);
                 return;
             }
 
-            if (!token) {
-                showResponse('create-apikey-response', { error: 'Auth token is required' }, true);
+            if (Object.keys(authHeaders).length === 0) {
+                showResponse('create-apikey-response', { error: 'JWT Token or API Key is required' }, true);
                 return;
             }
 
@@ -1095,7 +1155,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        ...authHeaders
                     },
                     body: JSON.stringify({ name, expiresInDays })
                 });
@@ -1140,16 +1200,16 @@
 
         async function listApiKeys() {
             const customToken = document.getElementById('list-apikey-token').value.trim();
-            const token = customToken || getToken();
+            const authHeaders = getAuthHeaders(customToken);
 
-            if (!token) {
-                showResponse('list-apikey-response', { error: 'Auth token is required' }, true);
+            if (Object.keys(authHeaders).length === 0) {
+                showResponse('list-apikey-response', { error: 'JWT Token or API Key is required' }, true);
                 return;
             }
 
             try {
                 const response = await fetch(`${getBaseUrl()}/auth/api-keys`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: authHeaders
                 });
                 const data = await response.json();
 
@@ -1421,15 +1481,21 @@
 
         async function createProject() {
             const customToken = document.getElementById('create-token').value.trim();
-            const token = customToken || getToken();
             const name = document.getElementById('create-name').value;
             const description = document.getElementById('create-description').value;
+            const authHeaders = getAuthHeaders(customToken);
+            
+            if (Object.keys(authHeaders).length === 0) {
+                showResponse('create-project-response', { error: 'JWT Token or API Key is required' }, true);
+                return;
+            }
+            
             try {
                 const response = await fetch(`${getBaseUrl()}/projects`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        ...authHeaders
                     },
                     body: JSON.stringify({ name, description })
                 });
@@ -1442,10 +1508,16 @@
 
         async function getAllProjects() {
             const customToken = document.getElementById('get-projects-token').value.trim();
-            const token = customToken || getToken();
+            const authHeaders = getAuthHeaders(customToken);
+            
+            if (Object.keys(authHeaders).length === 0) {
+                showResponse('get-projects-response', { error: 'JWT Token or API Key is required' }, true);
+                return;
+            }
+            
             try {
                 const response = await fetch(`${getBaseUrl()}/projects`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: authHeaders
                 });
                 const data = await response.json();
                 showResponse('get-projects-response', data, !response.ok);
@@ -1683,14 +1755,25 @@
 
         async function shortenUrl() {
             const customToken = document.getElementById('shorten-token').value.trim();
-            const token = customToken || getToken();
             const url = document.getElementById('shorten-url').value.trim();
+            const authHeaders = getAuthHeaders(customToken);
+            
+            if (!url) {
+                showResponse('shorten-response', { error: 'URL is required' }, true);
+                return;
+            }
+            
+            if (Object.keys(authHeaders).length === 0) {
+                showResponse('shorten-response', { error: 'JWT Token or API Key is required' }, true);
+                return;
+            }
+            
             try {
                 const response = await fetch(`${getBaseUrl()}/url/shorten`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        ...authHeaders
                     },
                     body: JSON.stringify({ url })
                 });
@@ -1733,13 +1816,18 @@
 
         async function searchContent() {
             const customToken = document.getElementById('search-token').value.trim();
-            const token = customToken || getToken();
             const keyword = document.getElementById('search-keyword').value.trim();
             const projectId = document.getElementById('search-project-id').value.trim();
             const depth = document.getElementById('search-depth').value.trim();
+            const authHeaders = getAuthHeaders(customToken);
 
             if (!keyword) {
                 showResponse('search-response', { error: 'Search keyword is required' }, true);
+                return;
+            }
+            
+            if (Object.keys(authHeaders).length === 0) {
+                showResponse('search-response', { error: 'JWT Token or API Key is required' }, true);
                 return;
             }
 
@@ -1750,7 +1838,7 @@
                 if (depth) params.append('depth', depth);
 
                 const response = await fetch(`${getBaseUrl()}/projects/search?${params.toString()}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: authHeaders
                 });
                 const data = await response.json();
                 
