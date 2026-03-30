@@ -302,9 +302,6 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
       }
     });
 
-    console.log(project);
-    
-
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
@@ -314,11 +311,11 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
     const owner = project.user.username;
     
     try {
-      // Get contents from GitHub
+      // Get contents from GitHub - pass empty string for root to get root contents
       const { data } = await octokit.rest.repos.getContent({
         owner,
         repo: repoName,
-        path: path
+        path: path || ''  // Pass empty string for root path to get root directory
       });
 
       console.log('repo', {path, repoName});
@@ -403,7 +400,7 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
       if (error.status === 404) {
         return res.status(404).json({ 
           error: 'Path not found',
-          message: `The path '${path}' does not exist in this repository.`
+          message: `The path '${path || '/'}' does not exist in this repository.`
         });
       }
       throw error;
