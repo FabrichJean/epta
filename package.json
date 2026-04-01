@@ -7,20 +7,17 @@
     "dev": "nodemon src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "seed": "ts-node prisma/seed.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio"
-  },
-  "prisma": {
-    "seed": "ts-node ./prisma/seed.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@octokit/rest": "^22.0.1",
-    "@prisma/client": "^7.6.0",
-    "@prisma/internals": "^7.6.0",
+    "@prisma/client": "^5.7.0",
     "@types/dotenv": "^6.1.1",
     "@types/socket.io": "^3.0.1",
     "bcryptjs": "^3.0.3",
@@ -42,7 +39,7 @@
     "@types/multer": "^2.0.0",
     "@types/node": "^20.10.4",
     "nodemon": "^3.0.2",
-    "prisma": "^7.6.0",
+    "prisma": "^5.7.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }

@@ -190,8 +190,8 @@ router.get('/search', authenticate, async (req: AuthRequest, res: Response) => {
 
     // Helper: recursively traverse repo contents up to depth and match names/paths
     async function traverseAndMatch(owner: string, repo: string, path: string, depth: number, results: any[]) {
-      try {
-        const { data } = await retry(() => octokit.rest.repos.getContent({ owner, repo, path: path || '' }), 3, 200);
+      try {        
+        const { data } = await retry(() => octokit.rest.repos.getContent({ owner, repo, path: path as any || undefined }), 3, 200);
 
         // data can be array or single
         const items = Array.isArray(data) ? data : [data];
@@ -311,15 +311,12 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
     const owner = project.user.username;
     
     try {
-      // Get contents from GitHub - pass empty string for root to get root contents
+      // Get contents from GitHub - pass undefined for root to get root contents
       const { data } = await octokit.rest.repos.getContent({
         owner,
         repo: repoName,
-        path: path || ''  // Pass empty string for root path to get root directory
+        path: path as any || undefined  // Pass undefined for root path to get root directory
       });
-
-      console.log('repo', {path, repoName});
-      
 
       // If it's a single file, return file details
       if (!Array.isArray(data)) {

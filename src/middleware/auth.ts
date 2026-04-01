@@ -7,6 +7,7 @@ import { User } from '@prisma/client';
 export interface AuthRequest extends Request {
   userId?: number;
   user?: Partial<User> & { [key: string]: any };
+  file?: any;
 }
 
 export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
