@@ -2,6 +2,9 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/auth';
 import githubRoutes from './routes/github';
@@ -9,6 +12,8 @@ import projectRoutes from './routes/projects';
 import shortUrlRoutes from './routes/shorturl';
 import filesRoutes from './routes/files';
 import { authenticate, AuthRequest } from './middleware/auth';
+import { setSocketIO } from './utils/websocket';
+import { cleanupExpiredApiKeys } from './utils/apiKey';
 
 // Load environment variables
 dotenv.config();
@@ -18,8 +23,59 @@ const prisma = new PrismaClient();
 
 // Initialize Express app
 const app = express();
+const server = createServer(app);
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: process.env.CORS_ORIGIN || "*",
+    methods: ["GET", "POST"]
+  }
+});
+
 const PORT = parseInt(process.env.PORT || '6000', 10);
 const HOST = process.env.HOST || '0.0.0.0';
+
+// Socket.IO authentication middleware
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  if (!token) {
+    return next(new Error('Authentication required'));
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
+    socket.data.userId = decoded.userId;
+    next();
+  } catch (err) {
+    next(new Error('Invalid token'));
+  }
+});
+
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log(`User ${socket.data.userId} connected to socket ${socket.id}`);
+  
+  // Join user to their own room for targeted messaging
+  socket.join(`user_${socket.data.userId}`);
+  
+  socket.on('disconnect', () => {
+    console.log(`User ${socket.data.userId} disconnected from socket ${socket.id}`);
+  });
+});
+
+// Set the Socket.IO instance for use in other modules
+setSocketIO(io);
+
+// Start periodic cleanup of expired API keys (every hour)
+setInterval(() => {
+  cleanupExpiredApiKeys().catch(err => 
+    console.error('Failed to cleanup expired API keys:', err)
+  );
+}, 60 * 60 * 1000); // 1 hour
+
+// Run initial cleanup
+cleanupExpiredApiKeys().catch(err => 
+  console.error('Initial API key cleanup failed:', err)
+);
 
 // CORS Configuration
 const corsOptions = {
@@ -108,11 +164,12 @@ app.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
 });
 
 // Start server
-app.listen(PORT, HOST, () => {
+server.listen(PORT, HOST, () => {
   console.log(`🚀 Server is running on:`);
   console.log(`   - Local:   http://localhost:${PORT}`);
   console.log(`   - Network: http://${HOST}:${PORT}`);
   console.log(`   - Playground: http://localhost:${PORT}/playground`);
+  console.log(`   - WebSocket: Available for real-time communication`);
 });
 
 // Graceful shutdown
