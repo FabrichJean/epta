@@ -2177,6 +2177,150 @@
                 </div>
               </div>
             </div>
+
+            <!-- List Starred Files -->
+            <div class="endpoint" data-endpoint-id="list-starred">
+              <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                <span class="endpoint-title">List Starred Files</span>
+                <span class="method get">GET</span>
+              </div>
+              <div class="endpoint-body">
+                <p><strong>Endpoint:</strong> /projects/starred/list</p>
+                <p style="color: #666; font-size: 0.9em; margin-bottom: 10px">
+                  🔑 Requires Authentication - Get all starred files for the authenticated user
+                </p>
+                <div class="form-row">
+                  <label>JWT Token (optional - uses global token if empty):</label>
+                  <input
+                    type="text"
+                    id="list-starred-token"
+                    placeholder="Leave empty to use global token"
+                  />
+                </div>
+                <button onclick="listStarredFiles()">Get Starred Files</button>
+                <div id="list-starred-response"></div>
+              </div>
+            </div>
+
+            <!-- Check Star Status -->
+            <div class="endpoint" data-endpoint-id="check-starred">
+              <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                <span class="endpoint-title">Check Star Status</span>
+                <span class="method get">GET</span>
+              </div>
+              <div class="endpoint-body">
+                <p><strong>Endpoint:</strong> /projects/starred/check/:projectId/:path</p>
+                <p style="color: #666; font-size: 0.9em; margin-bottom: 10px">
+                  🔑 Requires Authentication - Check if a specific file is starred
+                </p>
+                <div class="form-row">
+                  <label>JWT Token (optional - uses global token if empty):</label>
+                  <input
+                    type="text"
+                    id="check-starred-token"
+                    placeholder="Leave empty to use global token"
+                  />
+                </div>
+                <div class="form-row">
+                  <label>Project ID (required):</label>
+                  <input
+                    type="text"
+                    id="check-starred-project-id"
+                    placeholder="Enter project ID"
+                  />
+                </div>
+                <div class="form-row">
+                  <label>File Path (required):</label>
+                  <input
+                    type="text"
+                    id="check-starred-path"
+                    placeholder="e.g., src/components/Button.tsx"
+                  />
+                </div>
+                <button onclick="checkStarStatus()">Check Status</button>
+                <div id="check-starred-response"></div>
+              </div>
+            </div>
+
+            <!-- Star File -->
+            <div class="endpoint" data-endpoint-id="star-file">
+              <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                <span class="endpoint-title">Star File</span>
+                <span class="method post">POST</span>
+              </div>
+              <div class="endpoint-body">
+                <p><strong>Endpoint:</strong> /projects/starred/:projectId</p>
+                <p style="color: #666; font-size: 0.9em; margin-bottom: 10px">
+                  🔑 Requires Authentication - Mark a file as favorite/starred
+                </p>
+                <div class="form-row">
+                  <label>JWT Token (optional - uses global token if empty):</label>
+                  <input
+                    type="text"
+                    id="star-file-token"
+                    placeholder="Leave empty to use global token"
+                  />
+                </div>
+                <div class="form-row">
+                  <label>Project ID (required):</label>
+                  <input
+                    type="text"
+                    id="star-file-project-id"
+                    placeholder="Enter project ID"
+                  />
+                </div>
+                <div class="form-row">
+                  <label>File Path (required):</label>
+                  <input
+                    type="text"
+                    id="star-file-path"
+                    placeholder="e.g., src/components/Button.tsx"
+                  />
+                </div>
+                <button onclick="starFile()">Star File</button>
+                <div id="star-file-response"></div>
+              </div>
+            </div>
+
+            <!-- Unstar File -->
+            <div class="endpoint" data-endpoint-id="unstar-file">
+              <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                <span class="endpoint-title">Unstar File</span>
+                <span class="method delete">DELETE</span>
+              </div>
+              <div class="endpoint-body">
+                <p><strong>Endpoint:</strong> /projects/starred/:projectId</p>
+                <p style="color: #666; font-size: 0.9em; margin-bottom: 10px">
+                  🔑 Requires Authentication - Remove a file from favorites/starred
+                </p>
+                <div class="form-row">
+                  <label>JWT Token (optional - uses global token if empty):</label>
+                  <input
+                    type="text"
+                    id="unstar-file-token"
+                    placeholder="Leave empty to use global token"
+                  />
+                </div>
+                <div class="form-row">
+                  <label>Project ID (required):</label>
+                  <input
+                    type="text"
+                    id="unstar-file-project-id"
+                    placeholder="Enter project ID"
+                  />
+                </div>
+                <div class="form-row">
+                  <label>File Path (required):</label>
+                  <input
+                    type="text"
+                    id="unstar-file-path"
+                    placeholder="e.g., src/components/Button.tsx"
+                  />
+                </div>
+                <button onclick="unstarFile()" style="background-color: #f59e0b">Unstar File</button>
+                <div id="unstar-file-response"></div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -2303,6 +2447,30 @@
               method: "DELETE",
               path: "/projects/:id/contents",
               id: "bulk-delete",
+            },
+            {
+              title: "List Starred Files",
+              method: "GET",
+              path: "/projects/starred/list",
+              id: "list-starred",
+            },
+            {
+              title: "Check Star Status",
+              method: "GET",
+              path: "/projects/starred/check/:id/:path",
+              id: "check-starred",
+            },
+            {
+              title: "Star File",
+              method: "POST",
+              path: "/projects/starred/:id",
+              id: "star-file",
+            },
+            {
+              title: "Unstar File",
+              method: "DELETE",
+              path: "/projects/starred/:id",
+              id: "unstar-file",
             },
           ];
 
@@ -3975,6 +4143,202 @@
               console.error("Bulk delete error:", error);
               showResponse(
                 "bulk-delete-response",
+                { error: "Request failed", details: error.message },
+                true,
+              );
+            }
+          }
+
+          // Starred Files Functions
+
+          async function listStarredFiles() {
+            const customToken = document
+              .getElementById("list-starred-token")
+              .value.trim();
+            const token = customToken || getToken();
+            const authHeaders = getAuthHeaders(customToken);
+
+            if (Object.keys(authHeaders).length === 0) {
+              showResponse(
+                "list-starred-response",
+                { error: "Auth token or API key is required" },
+                true,
+              );
+              return;
+            }
+
+            try {
+              const response = await fetch(`${getBaseUrl()}/projects/starred/list`, {
+                method: "GET",
+                headers: authHeaders,
+              });
+              const data = await response.json();
+              showResponse("list-starred-response", data, !response.ok);
+            } catch (error) {
+              console.error("List starred files error:", error);
+              showResponse(
+                "list-starred-response",
+                { error: "Request failed", details: error.message },
+                true,
+              );
+            }
+          }
+
+          async function checkStarStatus() {
+            const customToken = document
+              .getElementById("check-starred-token")
+              .value.trim();
+            const projectId = document
+              .getElementById("check-starred-project-id")
+              .value.trim();
+            const path = document
+              .getElementById("check-starred-path")
+              .value.trim();
+            const authHeaders = getAuthHeaders(customToken);
+
+            if (!projectId || !path) {
+              showResponse(
+                "check-starred-response",
+                { error: "Project ID and file path are required" },
+                true,
+              );
+              return;
+            }
+
+            if (Object.keys(authHeaders).length === 0) {
+              showResponse(
+                "check-starred-response",
+                { error: "Auth token or API key is required" },
+                true,
+              );
+              return;
+            }
+
+            try {
+              const encodedPath = encodeURIComponent(path);
+              const response = await fetch(
+                `${getBaseUrl()}/projects/starred/check/${projectId}/${encodedPath}`,
+                {
+                  method: "GET",
+                  headers: authHeaders,
+                }
+              );
+              const data = await response.json();
+              showResponse("check-starred-response", data, !response.ok);
+            } catch (error) {
+              console.error("Check star status error:", error);
+              showResponse(
+                "check-starred-response",
+                { error: "Request failed", details: error.message },
+                true,
+              );
+            }
+          }
+
+          async function starFile() {
+            const customToken = document
+              .getElementById("star-file-token")
+              .value.trim();
+            const projectId = document
+              .getElementById("star-file-project-id")
+              .value.trim();
+            const path = document
+              .getElementById("star-file-path")
+              .value.trim();
+            const authHeaders = getAuthHeaders(customToken);
+
+            if (!projectId || !path) {
+              showResponse(
+                "star-file-response",
+                { error: "Project ID and file path are required" },
+                true,
+              );
+              return;
+            }
+
+            if (Object.keys(authHeaders).length === 0) {
+              showResponse(
+                "star-file-response",
+                { error: "Auth token or API key is required" },
+                true,
+              );
+              return;
+            }
+
+            try {
+              const response = await fetch(
+                `${getBaseUrl()}/projects/starred/${projectId}`,
+                {
+                  method: "POST",
+                  headers: { ...authHeaders, "Content-Type": "application/json" },
+                  body: JSON.stringify({ path }),
+                }
+              );
+              const data = await response.json();
+              showResponse("star-file-response", data, !response.ok);
+
+              if (response.ok) {
+                document.getElementById("star-file-path").value = "";
+              }
+            } catch (error) {
+              console.error("Star file error:", error);
+              showResponse(
+                "star-file-response",
+                { error: "Request failed", details: error.message },
+                true,
+              );
+            }
+          }
+
+          async function unstarFile() {
+            const customToken = document
+              .getElementById("unstar-file-token")
+              .value.trim();
+            const projectId = document
+              .getElementById("unstar-file-project-id")
+              .value.trim();
+            const path = document
+              .getElementById("unstar-file-path")
+              .value.trim();
+            const authHeaders = getAuthHeaders(customToken);
+
+            if (!projectId || !path) {
+              showResponse(
+                "unstar-file-response",
+                { error: "Project ID and file path are required" },
+                true,
+              );
+              return;
+            }
+
+            if (Object.keys(authHeaders).length === 0) {
+              showResponse(
+                "unstar-file-response",
+                { error: "Auth token or API key is required" },
+                true,
+              );
+              return;
+            }
+
+            try {
+              const response = await fetch(
+                `${getBaseUrl()}/projects/starred/${projectId}`,
+                {
+                  method: "DELETE",
+                  headers: { ...authHeaders, "Content-Type": "application/json" },
+                  body: JSON.stringify({ path }),
+                }
+              );
+              const data = await response.json();
+              showResponse("unstar-file-response", data, !response.ok);
+
+              if (response.ok) {
+                document.getElementById("unstar-file-path").value = "";
+              }
+            } catch (error) {
+              console.error("Unstar file error:", error);
+              showResponse(
+                "unstar-file-response",
                 { error: "Request failed", details: error.message },
                 true,
               );

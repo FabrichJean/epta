@@ -163,8 +163,6 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
         }
       }
     });
-
-    console.log(project);
     
 
     if (!project) {
@@ -183,9 +181,6 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
         path: path
       });
 
-      console.log('repo', {path, repoName});
-      
-
       // If it's a single file, return file details
       if (!Array.isArray(data)) {
         const fileData: any = data;
@@ -202,6 +197,15 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
           }
         });
         
+        // Check if file is starred
+        const stared = await prisma.stared.findFirst({
+          where: {
+            userId,
+            projectId,
+            path: fileData.path
+          }
+        });
+        
         return res.json({
           type: 'file',
           name: fileData.name,
@@ -212,13 +216,15 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
           downloadUrl: fileData.download_url,
           publicUrl: publicUrl, // Permanent public URL
           content: fileData.content, // Base64 encoded content
-          encoding: fileData.encoding
+          encoding: fileData.encoding,
+          isStarred: !!stared // Whether the file is starred
         });
       }
 
       // If it's a directory, return list of contents with publicUrl for files
       const contents = await Promise.all(data.map(async (item: any) => {
         let publicUrl = null;
+        let isStarred = false;
         
         // Generate publicUrl only for files, not directories
         if (item.type === 'file' && item.download_url) {
@@ -234,6 +240,18 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
           });
         }
         
+        // Check if file is starred
+        if (item.type === 'file') {
+          const stared = await prisma.stared.findFirst({
+            where: {
+              userId,
+              projectId,
+              path: item.path
+            }
+          });
+          isStarred = !!stared;
+        }
+        
         return {
           type: item.type, // 'file' or 'dir'
           name: item.name,
@@ -242,7 +260,8 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
           sha: item.sha,
           url: item.html_url,
           downloadUrl: item.download_url,
-          publicUrl: publicUrl // Permanent public URL for files only
+          publicUrl: publicUrl, // Permanent public URL for files only
+          isStarred: isStarred // Whether the file is starred
         };
       }));
 
@@ -560,6 +579,143 @@ router.post('/:projectId/upload', authenticate, upload.single('file'), async (re
     console.error('Upload file error:', error);
     res.status(500).json({ 
       error: 'Failed to upload file',
+      message: error.message 
+    });
+  }
+});
+
+// Get all starred files for authenticated user
+router.get('/starred/list', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+
+    const stareds = await prisma.stared.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json({ 
+      count: stareds.length,
+      stareds 
+    });
+  } catch (error: any) {
+    console.error('Get starred files error:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch starred files',
+      message: error.message 
+    });
+  }
+});
+
+// Check if a file is starred
+router.get('/starred/check/:projectId/:path', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const { projectId, path } = req.params;
+    const projectIdNum = parseInt(projectId);
+
+    const stared = await prisma.stared.findFirst({
+      where: { 
+        userId,
+        projectId: projectIdNum,
+        path: decodeURIComponent(path)
+      },
+    });
+
+    res.json({ 
+      isStarred: !!stared,
+      stared: stared || null
+    });
+  } catch (error: any) {
+    console.error('Check starred file error:', error);
+    res.status(500).json({ 
+      error: 'Failed to check starred status',
+      message: error.message 
+    });
+  }
+});
+
+// Star a file
+router.post('/starred/:projectId', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const { projectId } = req.params;
+    const { path } = req.body;
+    const projectIdNum = parseInt(projectId);
+
+    if (!path) {
+      return res.status(400).json({ error: 'File path is required' });
+    }
+
+    // Check if file is already starred
+    const existing = await prisma.stared.findFirst({
+      where: { 
+        userId,
+        projectId: projectIdNum,
+        path
+      },
+    });
+
+    if (existing) {
+      return res.status(400).json({ error: 'File is already starred' });
+    }
+
+    const stared = await prisma.stared.create({
+      data: {
+        path,
+        userId,
+        projectId: projectIdNum,
+      },
+    });
+
+    res.status(201).json({
+      message: 'File starred successfully',
+      stared,
+    });
+  } catch (error: any) {
+    console.error('Star file error:', error);
+    res.status(500).json({ 
+      error: 'Failed to star file',
+      message: error.message 
+    });
+  }
+});
+
+// Unstar a file
+router.delete('/starred/:projectId', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const { projectId } = req.params;
+    const { path } = req.body;
+    const projectIdNum = parseInt(projectId);
+
+    if (!path) {
+      return res.status(400).json({ error: 'File path is required' });
+    }
+
+    const stared = await prisma.stared.findFirst({
+      where: { 
+        userId,
+        projectId: projectIdNum,
+        path
+      },
+    });
+
+    if (!stared) {
+      return res.status(404).json({ error: 'Starred file not found' });
+    }
+
+    await prisma.stared.delete({
+      where: { id: stared.id },
+    });
+
+    res.json({
+      message: 'File unstarred successfully',
+    });
+  } catch (error: any) {
+    console.error('Unstar file error:', error);
+    res.status(500).json({ 
+      error: 'Failed to unstar file',
       message: error.message 
     });
   }

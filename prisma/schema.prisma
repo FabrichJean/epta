@@ -8,7 +8,6 @@ generator client {
 datasource db {
     provider = "mysql"
     url      = env("DATABASE_URL")
-
 }
 
 model User {
@@ -22,6 +21,7 @@ model User {
     apiKeys     ApiKey[]
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
+    stareds     Stared[]
 }
 
 model Project {
@@ -33,6 +33,7 @@ model Project {
     metadata    Json? // Additional metadata (stars, forks, language, etc.)
     userId      Int
     user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    stareds     Stared[]
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
 
@@ -65,19 +66,34 @@ model JsonTable {
 }
 
 model ApiKey {
-    id          Int      @id @default(autoincrement())
-    name        String // User-friendly name for the API key
-    keyHash     String   @unique // Hashed version of the API key
-    keyPreview  String // First 8 chars + "..." for display
-    userId      Int // Owner of the API key
-    user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-    expiresAt   DateTime // Expiration date
-    isActive    Boolean  @default(true) // Can be disabled without deleting
-    lastUsedAt  DateTime? // Track last usage
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+    id         Int       @id @default(autoincrement())
+    name       String // User-friendly name for the API key
+    keyHash    String    @unique // Hashed version of the API key
+    keyPreview String // First 8 chars + "..." for display
+    userId     Int // Owner of the API key
+    user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    expiresAt  DateTime // Expiration date
+    isActive   Boolean   @default(true) // Can be disabled without deleting
+    lastUsedAt DateTime? // Track last usage
+    createdAt  DateTime  @default(now())
+    updatedAt  DateTime  @updatedAt
 
     @@index([keyHash])
     @@index([userId])
     @@index([expiresAt])
+}
+
+model Stared {
+    id        Int      @id @default(autoincrement())
+    path      String
+    userId    Int
+    projectId Int
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([userId, projectId, path])
+    @@index([userId])
+    @@index([projectId])
 }
