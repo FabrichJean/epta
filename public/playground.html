@@ -1109,6 +1109,44 @@
                 </div>
                 <button onclick="register()">Register</button>
                 <div id="register-response"></div>
+                
+                <!-- Code Examples -->
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div style="margin-top: 12px;">
+                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ghp": "ghp_xxxxxxxxxxxx"
+  }'</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/auth/register', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    ghp: 'ghp_xxxxxxxxxxxx'
+  })
+})
+.then(res => res.json())
+.then(data => {
+  localStorage.setItem('token', data.token);
+  console.log('Registered:', data);
+})</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+
+const response = await axios.post(
+  'http://localhost:4000/auth/register',
+  { ghp: 'ghp_xxxxxxxxxxxx' }
+);
+console.log('Token:', response.data.token);</pre>
+                    </div>
+                  </details>
+                </div>
               </div>
             </div>
 
@@ -1130,6 +1168,44 @@
                 </div>
                 <button onclick="login()">Login</button>
                 <div id="login-response"></div>
+                
+                <!-- Code Examples -->
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div style="margin-top: 12px;">
+                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ghp": "ghp_xxxxxxxxxxxx"
+  }'</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/auth/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    ghp: 'ghp_xxxxxxxxxxxx'
+  })
+})
+.then(res => res.json())
+.then(data => {
+  localStorage.setItem('token', data.token);
+  console.log('Logged in:', data);
+})</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+
+const response = await axios.post(
+  'http://localhost:4000/auth/login',
+  { ghp: 'ghp_xxxxxxxxxxxx' }
+);
+console.log('Token:', response.data.token);</pre>
+                    </div>
+                  </details>
+                </div>
               </div>
             </div>
 
@@ -1427,6 +1503,55 @@
                 </div>
                 <button onclick="createProject()">Create Project</button>
                 <div id="create-project-response"></div>
+                
+                <!-- Code Examples -->
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div style="margin-top: 12px;">
+                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/projects \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "my-awesome-project",
+    "description": "A cool project"
+  }'</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    name: 'my-awesome-project',
+    description: 'A cool project'
+  })
+})
+.then(res => res.json())
+.then(data => console.log(data))</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+
+const response = await axios.post(
+  'http://localhost:4000/projects',
+  {
+    name: 'my-awesome-project',
+    description: 'A cool project'
+  },
+  {
+    headers: {
+      'Authorization': 'Bearer YOUR_JWT_TOKEN'
+    }
+  }
+);
+console.log(response.data);</pre>
+                    </div>
+                  </details>
+                </div>
               </div>
             </div>
 
@@ -1533,6 +1658,51 @@
                 </div>
                 <button onclick="getProjectContents()">Get Contents</button>
                 <div id="contents-response"></div>
+                
+                <!-- Code Examples -->
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div style="margin-top: 12px;">
+                      <p style="font-weight: 500; margin-bottom: 8px;">cURL (Root Directory):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X GET http://localhost:4000/projects/6/contents/ \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">cURL (Specific Folder):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X GET http://localhost:4000/projects/6/contents/src \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">const projectId = '6';
+const path = 'src/components'; // or empty string for root
+
+fetch(`http://localhost:4000/projects/${projectId}/contents/${path}`, {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN'
+  }
+})
+.then(res => res.json())
+.then(data => console.log(data))</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+
+const projectId = '6';
+const path = 'src/utils'; // or empty for root
+
+const response = await axios.get(
+  `http://localhost:4000/projects/${projectId}/contents/${path}`,
+  {
+    headers: {
+      'Authorization': 'Bearer YOUR_JWT_TOKEN'
+    }
+  }
+);
+console.log(response.data);</pre>
+                    </div>
+                  </details>
+                </div>
               </div>
             </div>
 
@@ -1636,6 +1806,54 @@
                 </div>
                 <button onclick="uploadFile()">Upload File</button>
                 <div id="upload-response"></div>
+                
+                <!-- Code Examples -->
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div style="margin-top: 12px;">
+                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/projects/6/upload \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -F "file=@./myfile.txt" \
+  -F "path=docs/myfile.txt"</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch with FormData):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">const fileInput = document.getElementById('fileInput');
+const file = fileInput.files[0];
+const formData = new FormData();
+formData.append('file', file);
+formData.append('path', 'docs/myfile.txt');
+
+fetch('http://localhost:4000/projects/6/upload', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN'
+  },
+  body: formData
+})
+.then(res => res.json())
+.then(data => console.log(data))</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (FormData):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const fs = require('fs');
+const FormData = require('form-data');
+const axios = require('axios');
+
+const form = new FormData();
+form.append('file', fs.createReadStream('./myfile.txt'));
+form.append('path', 'docs/myfile.txt');
+
+await axios.post('http://localhost:4000/projects/6/upload', form, {
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN',
+    ...form.getHeaders()
+  }
+});</pre>
+                    </div>
+                  </details>
+                </div>
+                
                 <div style="margin-top: 12px">
                   <label
                     style="
@@ -1740,6 +1958,54 @@
                 </div>
                 <button onclick="updateFile()">Update File</button>
                 <div id="update-file-response"></div>
+                
+                <!-- Code Examples -->
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div style="margin-top: 12px;">
+                      <p style="font-weight: 500; margin-bottom: 8px;">cURL (Raw Content):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X PUT http://localhost:4000/projects/6/contents/README.md \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "# My Project\nUpdated content...",
+    "message": "Update README"
+  }'</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/6/contents/README.md', {
+  method: 'PUT',
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    content: '# My Project\nUpdated content...',
+    message: 'Update README'
+  })
+})
+.then(res => res.json())
+.then(data => console.log(data))</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+
+await axios.put(
+  'http://localhost:4000/projects/6/contents/README.md',
+  {
+    content: '# My Project\nUpdated content...',
+    message: 'Update README'
+  },
+  {
+    headers: {
+      'Authorization': 'Bearer YOUR_JWT_TOKEN'
+    }
+  }
+);</pre>
+                    </div>
+                  </details>
+                </div>
               </div>
             </div>
 
@@ -1782,6 +2048,51 @@
                 </div>
                 <button onclick="deleteFile()">Delete File</button>
                 <div id="delete-file-response"></div>
+                
+                <!-- Code Examples -->
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div style="margin-top: 12px;">
+                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X DELETE http://localhost:4000/projects/6/contents/myfile.json \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Delete old file"
+  }'</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/6/contents/myfile.json', {
+  method: 'DELETE',
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    message: 'Delete old file'
+  })
+})
+.then(res => res.json())
+.then(data => console.log(data))</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+
+await axios.delete(
+  'http://localhost:4000/projects/6/contents/myfile.json',
+  {
+    data: {
+      message: 'Delete old file'
+    },
+    headers: {
+      'Authorization': 'Bearer YOUR_JWT_TOKEN'
+    }
+  }
+);</pre>
+                    </div>
+                  </details>
+                </div>
               </div>
             </div>
 
@@ -1852,6 +2163,53 @@
                 </div>
                 <button onclick="shortenUrl()">Shorten URL</button>
                 <div id="shorten-response"></div>
+                
+                <!-- Code Examples -->
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div style="margin-top: 12px;">
+                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/url/shorten \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com/very/long/url"
+  }'</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/url/shorten', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    url: 'https://example.com/very/long/url'
+  })
+})
+.then(res => res.json())
+.then(data => console.log('Short code:', data.shortCode))</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+
+const response = await axios.post(
+  'http://localhost:4000/url/shorten',
+  {
+    url: 'https://example.com/very/long/url'
+  },
+  {
+    headers: {
+      'Authorization': 'Bearer YOUR_JWT_TOKEN'
+    }
+  }
+);
+console.log('Visit:', response.data.visitUrl);</pre>
+                    </div>
+                  </details>
+                </div>
+              </div>
               </div>
             </div>
 
@@ -1994,6 +2352,59 @@
                 </div>
                 <button onclick="searchContent()">Search</button>
                 <div id="search-response"></div>
+                
+                <!-- Code Examples -->
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div style="margin-top: 12px;">
+                      <p style="font-weight: 500; margin-bottom: 8px;">cURL (Search all projects):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X GET "http://localhost:4000/projects/search?keyword=utils&depth=2" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">cURL (Search specific project):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X GET "http://localhost:4000/projects/search?keyword=component&projectId=6&depth=3" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">const keyword = 'utils';
+const depth = '2';
+const projectId = '6'; // optional
+
+const params = new URLSearchParams();
+params.append('keyword', keyword);
+params.append('depth', depth);
+if (projectId) params.append('projectId', projectId);
+
+fetch(`http://localhost:4000/projects/search?${params}`, {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN'
+  }
+})
+.then(res => res.json())
+.then(data => console.log(data))</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+
+const response = await axios.get(
+  'http://localhost:4000/projects/search',
+  {
+    params: {
+      keyword: 'utils',
+      depth: 2,
+      projectId: 6 // optional
+    },
+    headers: {
+      'Authorization': 'Bearer YOUR_JWT_TOKEN'
+    }
+  }
+);
+console.log(response.data);</pre>
+                    </div>
+                  </details>
+                </div>
               </div>
             </div>
 
@@ -2059,6 +2470,51 @@
                 </div>
                 <button onclick="createFolder()">Create Folder</button>
                 <div id="folder-response"></div>
+                
+                <!-- Code Examples -->
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div style="margin-top: 12px;">
+                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/projects/6/folders/src/components \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Create component folder structure"
+  }'</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/6/folders/src/components', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    message: 'Create component folder structure'
+  })
+})
+.then(res => res.json())
+.then(data => console.log(data))</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+
+await axios.post(
+  'http://localhost:4000/projects/6/folders/src/components',
+  {
+    message: 'Create component folder structure'
+  },
+  {
+    headers: {
+      'Authorization': 'Bearer YOUR_JWT_TOKEN'
+    }
+  }
+);</pre>
+                    </div>
+                  </details>
+                </div>
               </div>
             </div>
 
@@ -2175,6 +2631,63 @@
                     "
                   ></div>
                 </div>
+                
+                <!-- Code Examples -->
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div style="margin-top: 12px;">
+                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X DELETE http://localhost:4000/projects/6/contents \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "paths": [
+      "src/file1.js",
+      "src/file2.ts",
+      "docs/readme.md"
+    ]
+  }'</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/6/contents', {
+  method: 'DELETE',
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    paths: [
+      'src/file1.js',
+      'src/file2.ts',
+      'docs/readme.md'
+    ]
+  })
+})
+.then(res => res.json())
+.then(data => console.log(data))</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+
+await axios.delete(
+  'http://localhost:4000/projects/6/contents',
+  {
+    data: {
+      paths: [
+        'src/file1.js',
+        'src/file2.ts',
+        'docs/readme.md'
+      ]
+    },
+    headers: {
+      'Authorization': 'Bearer YOUR_JWT_TOKEN'
+    }
+  }
+);</pre>
+                    </div>
+                  </details>
+                </div>
               </div>
             </div>
 
@@ -2199,6 +2712,41 @@
                 </div>
                 <button onclick="listStarredFiles()">Get Starred Files</button>
                 <div id="list-starred-response"></div>
+                
+                <!-- Code Examples -->
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div style="margin-top: 12px;">
+                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X GET http://localhost:4000/projects/starred/list \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/starred/list', {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN'
+  }
+})
+.then(res => res.json())
+.then(data => console.log(data))</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+
+const response = await axios.get(
+  'http://localhost:4000/projects/starred/list',
+  {
+    headers: {
+      'Authorization': 'Bearer YOUR_JWT_TOKEN'
+    }
+  }
+);
+console.log(response.data);</pre>
+                    </div>
+                  </details>
+                </div>
               </div>
             </div>
 
@@ -2239,6 +2787,48 @@
                 </div>
                 <button onclick="checkStarStatus()">Check Status</button>
                 <div id="check-starred-response"></div>
+                
+                <!-- Code Examples -->
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div style="margin-top: 12px;">
+                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X GET "http://localhost:4000/projects/starred/check/6/src%2Fcomponents%2FButton.tsx" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">const projectId = '6';
+const path = 'src/components/Button.tsx';
+const encodedPath = encodeURIComponent(path);
+
+fetch(`http://localhost:4000/projects/starred/check/${projectId}/${encodedPath}`, {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN'
+  }
+})
+.then(res => res.json())
+.then(data => console.log(data))</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+
+const projectId = '6';
+const path = 'src/components/Button.tsx';
+
+const response = await axios.get(
+  `http://localhost:4000/projects/starred/check/${projectId}/${encodeURIComponent(path)}`,
+  {
+    headers: {
+      'Authorization': 'Bearer YOUR_JWT_TOKEN'
+    }
+  }
+);
+console.log(response.data);</pre>
+                    </div>
+                  </details>
+                </div>
               </div>
             </div>
 
@@ -2279,6 +2869,47 @@
                 </div>
                 <button onclick="starFile()">Star File</button>
                 <div id="star-file-response"></div>
+                
+                <!-- Code Examples -->
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div style="margin-top: 12px;">
+                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/projects/starred/6 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "path": "src/components/Button.tsx"
+  }'</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/starred/6', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    path: 'src/components/Button.tsx'
+  })
+})
+.then(res => res.json())
+.then(data => console.log(data))</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+
+await axios.post('http://localhost:4000/projects/starred/6', {
+  path: 'src/components/Button.tsx'
+}, {
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN'
+  }
+});</pre>
+                    </div>
+                  </details>
+                </div>
               </div>
             </div>
 
@@ -2319,6 +2950,48 @@
                 </div>
                 <button onclick="unstarFile()" style="background-color: #f59e0b">Unstar File</button>
                 <div id="unstar-file-response"></div>
+                
+                <!-- Code Examples -->
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div style="margin-top: 12px;">
+                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X DELETE http://localhost:4000/projects/starred/6 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "path": "src/components/Button.tsx"
+  }'</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/starred/6', {
+  method: 'DELETE',
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    path: 'src/components/Button.tsx'
+  })
+})
+.then(res => res.json())
+.then(data => console.log(data))</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+
+await axios.delete('http://localhost:4000/projects/starred/6', {
+  data: {
+    path: 'src/components/Button.tsx'
+  },
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN'
+  }
+});</pre>
+                    </div>
+                  </details>
+                </div>
               </div>
             </div>
           </div>
