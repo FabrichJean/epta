@@ -1,7 +1,6 @@
 import { Router, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
-import { Octokit } from "@octokit/rest";
 import { encryptToken, decryptToken } from "../utils/crypto";
 import { authenticate, AuthRequest } from "../middleware/auth";
 import {
@@ -9,6 +8,10 @@ import {
   hashApiKey,
   createApiKeyPreview,
 } from "../utils/apiKey";
+import {
+  verifyGitHubToken,
+  verifyGitHubTokenBelongsToUser,
+} from "../utils/github";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -39,19 +42,16 @@ router.post("/register", async (req: Request, res: Response) => {
         .json({ error: "GitHub Personal Token is required" });
     }
 
-    // Fetch GitHub user information
-    const octokit = new Octokit({ auth: ghp });
-    let githubUser;
+    // Verify GitHub token and fetch user information
+    const verification = await verifyGitHubToken(ghp);
 
-    try {
-      const { data } = await octokit.rest.users.getAuthenticated();
-      githubUser = data;
-    } catch (error: any) {
-      if (error.status === 401) {
-        return res.status(401).json({ error: "Invalid GitHub Personal Token" });
-      }
-      throw error;
+    if (!verification.isValid) {
+      return res.status(verification.statusCode || 401).json({
+        error: verification.error,
+      });
     }
+
+    const githubUser = verification.user!;
 
     // Check if user already exists by email or username
     const existingUser = await prisma.user.findFirst({
@@ -113,19 +113,16 @@ router.post("/login", async (req: Request, res: Response) => {
         .json({ error: "GitHub Personal Token is required" });
     }
 
-    // Verify token with GitHub API
-    const octokit = new Octokit({ auth: ghp });
-    let githubUser;
+    // Verify GitHub token and fetch user information
+    const verification = await verifyGitHubToken(ghp);
 
-    try {
-      const { data } = await octokit.rest.users.getAuthenticated();
-      githubUser = data;
-    } catch (error: any) {
-      if (error.status === 401) {
-        return res.status(401).json({ error: "Invalid GitHub Personal Token" });
-      }
-      throw error;
+    if (!verification.isValid) {
+      return res.status(verification.statusCode || 401).json({
+        error: verification.error,
+      });
     }
+
+    const githubUser = verification.user!;
 
     // Find user by username
     const authenticatedUser = await prisma.user.findFirst({
@@ -186,20 +183,15 @@ router.put(
       }
 
       // Verify the new token with GitHub API
-      const octokit = new Octokit({ auth: ghp });
-      let githubUser;
+      const verification = await verifyGitHubToken(ghp);
 
-      try {
-        const { data } = await octokit.rest.users.getAuthenticated();
-        githubUser = data;
-      } catch (error: any) {
-        if (error.status === 401) {
-          return res
-            .status(401)
-            .json({ error: "Invalid GitHub Personal Token" });
-        }
-        throw error;
+      if (!verification.isValid) {
+        return res.status(verification.statusCode || 401).json({
+          error: verification.error,
+        });
       }
+
+      const githubUser = verification.user!;
 
       // Get current user
       const currentUser = await prisma.user.findUnique({
