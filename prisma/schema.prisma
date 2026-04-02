@@ -11,25 +11,24 @@ datasource db {
 }
 
 model User {
-    id          Int       @id @default(autoincrement())
-    email       String
-    name        String    @unique
-    username    String
-    avatarUrl   String // GitHub avatar URL
-    githubToken String    @db.Text // Encrypted GitHub Personal Token
-    projects    Project[]
-    apiKeys     ApiKey[]
-    createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @updatedAt
+    id           Int       @id @default(autoincrement())
+    email        String    @unique
+    name         String
+    username     String    @unique // GitHub username
+    avatarUrl    String    // GitHub avatar URL
+    githubToken  String    @db.Text // Encrypted GitHub Personal Token
+    projects     Project[]
+    createdAt    DateTime  @default(now())
+    updatedAt    DateTime  @updatedAt
 }
 
 model Project {
     id          Int      @id @default(autoincrement())
     name        String
-    link        String // GitHub repository URL
+    link        String   // GitHub repository URL
     description String?  @db.Text
     isPrivate   Boolean  @default(true)
-    metadata    Json? // Additional metadata (stars, forks, language, etc.)
+    metadata    Json?    // Additional metadata (stars, forks, language, etc.)
     userId      Int
     user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
     createdAt   DateTime @default(now())
@@ -42,41 +41,10 @@ model ShortUrl {
     id          Int      @id @default(autoincrement())
     shortCode   String   @unique // Short code (e.g., "abc123")
     originalUrl String   @db.Text // Original long URL
-    userId      Int? // Optional: track which user created it
+    userId      Int?     // Optional: track which user created it
     clicks      Int      @default(0) // Track number of clicks
     createdAt   DateTime @default(now())
-
+    
     @@index([shortCode])
     @@index([userId])
-}
-
-model JsonTable {
-    id          Int      @id @default(autoincrement())
-    name        String // Table name
-    description String?  @db.Text // Optional description
-    columns     Json // Array of column definitions: [{ name: string, type: string }]
-    rows        Json // Array of row data: [[value1, value2, ...], ...]
-    userId      Int // Owner of the table
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
-
-    @@index([userId])
-}
-
-model ApiKey {
-    id          Int      @id @default(autoincrement())
-    name        String // User-friendly name for the API key
-    keyHash     String   @unique // Hashed version of the API key
-    keyPreview  String // First 8 chars + "..." for display
-    userId      Int // Owner of the API key
-    user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-    expiresAt   DateTime // Expiration date
-    isActive    Boolean  @default(true) // Can be disabled without deleting
-    lastUsedAt  DateTime? // Track last usage
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
-
-    @@index([keyHash])
-    @@index([userId])
-    @@index([expiresAt])
 }

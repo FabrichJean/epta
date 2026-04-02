@@ -93,6 +93,11 @@
             display: flex;
         }
 
+        /* Sidebar with hidden header */
+        .app-header[style*="display: none"] ~ .app-container .sidebar {
+            top: 0 !important;
+        }
+
         .sidebar-header {
             padding: 12px 16px;
             border-bottom: 1px solid #d1d9e0;
@@ -222,6 +227,10 @@
                 margin-left: 0;
                 padding-left: 12px !important;
                 width: 100% !important;
+            }
+
+            .sidebar.active ~ .main-content.compact-mode {
+                padding-left: 0 !important;
             }
 
             .app-container {
@@ -360,6 +369,32 @@
                 font-size: 0.7rem;
                 padding: 10px;
             }
+
+            /* Compact mode overrides for tablet screens */
+            .main-content.compact-mode {
+                padding: 4px !important;
+            }
+
+            .container.compact-mode {
+                padding: 8px !important;
+            }
+
+            .config-section.compact-mode {
+                padding: 6px !important;
+                margin-bottom: 8px !important;
+            }
+
+            .endpoint.compact-mode {
+                margin-bottom: 4px !important;
+            }
+
+            .endpoint-header.compact-mode {
+                padding: 6px 8px !important;
+            }
+
+            .endpoint-body.compact-mode {
+                padding: 8px !important;
+            }
         }
 
         /* Extra small screens */
@@ -380,6 +415,10 @@
             .sidebar.active ~ .main-content {
                 padding-left: 12px !important;
                 width: 100% !important;
+            }
+
+            .sidebar.active ~ .main-content.compact-mode {
+                padding-left: 0 !important;
             }
 
             .main-content {
@@ -491,6 +530,32 @@
             .input-group {
                 margin-bottom: 8px;
             }
+
+            /* Compact mode overrides for mobile screens */
+            .main-content.compact-mode {
+                padding: 4px !important;
+            }
+
+            .container.compact-mode {
+                padding: 8px !important;
+            }
+
+            .config-section.compact-mode {
+                padding: 6px !important;
+                margin-bottom: 8px !important;
+            }
+
+            .endpoint.compact-mode {
+                margin-bottom: 4px !important;
+            }
+
+            .endpoint-header.compact-mode {
+                padding: 6px 8px !important;
+            }
+
+            .endpoint-body.compact-mode {
+                padding: 8px !important;
+            }
         }
 
         /* Large screens */
@@ -501,6 +566,58 @@
 
             .sidebar.active ~ .main-content .container {
                 max-width: 1000px;
+            }
+        }
+
+        /* Compact mode - minimal spacing */
+        .app-header.compact-mode {
+            padding: 6px 8px;
+        }
+
+        .app-header.compact-mode h1 {
+            font-size: 0.9rem;
+        }
+
+        .main-content.compact-mode {
+            padding: 4px !important;
+        }
+
+        .container.compact-mode {
+            padding: 8px !important;
+            margin: 0 !important;
+        }
+
+        .config-section.compact-mode {
+            padding: 6px !important;
+            margin-bottom: 8px !important;
+        }
+
+        .endpoint.compact-mode {
+            margin-bottom: 4px !important;
+        }
+
+        .endpoint-header.compact-mode {
+            padding: 6px 8px !important;
+        }
+
+        .endpoint-body.compact-mode {
+            padding: 8px !important;
+        }
+
+        .sidebar.active ~ .main-content.compact-mode {
+            padding-left: 254px !important;
+        }
+
+        /* Compact mode with sidebar on small screens */
+        @media (max-width: 768px) {
+            .app-container.compact-mode .sidebar.active ~ .main-content {
+                padding-left: 0 !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .app-container.compact-mode .sidebar.active ~ .main-content {
+                padding-left: 0 !important;
             }
         }
 
@@ -1546,6 +1663,42 @@
             { title: 'Create Folder', method: 'POST', path: '/projects/:id/folders/*', id: 'folder' },
             { title: 'Bulk Delete Files', method: 'DELETE', path: '/projects/:id/contents', id: 'bulk-delete' }
         ];
+
+        // Check for query parameters on page load
+        function initializeFromQueryParams() {
+            const params = new URLSearchParams(window.location.search);
+            const panelView = params.get('panelview');
+            const hideHeader = params.get('hideheader');
+            const compactMode = params.get('compactmode');
+            
+            if (panelView === 'true') {
+                switchView('sidebar');
+            }
+            
+            if (hideHeader === 'true') {
+                document.querySelector('.app-header').style.display = 'none';
+                // Adjust sidebar top position when header is hidden
+                const sidebar = document.getElementById('sidebar');
+                sidebar.style.top = '0';
+                // Adjust body padding/margin
+                document.querySelector('.app-container').style.marginTop = '0';
+            }
+
+            if (compactMode === 'true') {
+                // Add compact-mode class to app-container
+                const appContainer = document.querySelector('.app-container');
+                appContainer.classList.add('compact-mode');
+                
+                // Apply compact mode to all relevant elements
+                document.querySelector('.app-header').classList.add('compact-mode');
+                document.querySelector('.main-content').classList.add('compact-mode');
+                document.querySelector('.container').classList.add('compact-mode');
+                document.querySelectorAll('.config-section').forEach(el => el.classList.add('compact-mode'));
+                document.querySelectorAll('.endpoint').forEach(el => el.classList.add('compact-mode'));
+                document.querySelectorAll('.endpoint-header').forEach(el => el.classList.add('compact-mode'));
+                document.querySelectorAll('.endpoint-body').forEach(el => el.classList.add('compact-mode'));
+            }
+        }
 
         function switchView(view) {
             const sidebar = document.getElementById('sidebar');
@@ -2779,6 +2932,9 @@
                 showResponse('bulk-delete-response', { error: 'Request failed', details: error.message }, true);
             }
         }
+
+        // Initialize from query parameters on page load
+        window.addEventListener('DOMContentLoaded', initializeFromQueryParams);
     </script>
         </div>
     </div>
