@@ -2408,6 +2408,116 @@ console.log(response.data);</pre>
               </div>
             </div>
 
+            <!-- Create File with Text Content -->
+            <div class="endpoint" data-endpoint-id="create-file-text">
+              <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                <span class="endpoint-title">Create/Update File with Text Content</span>
+                <span class="method post">POST</span>
+              </div>
+              <div class="endpoint-body">
+                <p><strong>Endpoint:</strong> /projects/:id/contents/*</p>
+                <p style="color: #666; font-size: 0.9em; margin-bottom: 10px">
+                  🔑 Requires Authentication
+                </p>
+                <div class="form-row">
+                  <label>JWT Token (optional - uses global token if empty):</label>
+                  <input
+                    type="text"
+                    id="create-file-text-token"
+                    placeholder="Leave empty to use global token"
+                  />
+                </div>
+                <div class="form-row">
+                  <label>Project ID:</label>
+                  <input type="text" id="create-file-text-project-id" placeholder="6" />
+                </div>
+                <div class="form-row">
+                  <label>File Path:</label>
+                  <input
+                    type="text"
+                    id="create-file-text-path"
+                    placeholder="e.g., src/app.js, docs/readme.md, test.txt"
+                  />
+                </div>
+                <div class="form-row">
+                  <label>File Content:</label>
+                  <textarea
+                    id="create-file-text-content"
+                    placeholder="Enter your file content here..."
+                    rows="8"
+                  ></textarea>
+                </div>
+                <div class="form-row">
+                  <label>Commit Message (optional):</label>
+                  <input
+                    type="text"
+                    id="create-file-text-message"
+                    placeholder="e.g., Initial commit"
+                  />
+                </div>
+                <button onclick="createFileWithTextContent()">Create/Update File</button>
+                <div id="create-file-text-response"></div>
+                
+                <!-- Code Examples -->
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div style="margin-top: 12px;">
+                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/projects/6/contents/src/app.js \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "console.log(\"Hello World\");",
+    "message": "Initial app setup"
+  }'</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">const fileContent = `console.log("Hello World");`;
+
+fetch('http://localhost:4000/projects/6/contents/src/app.js', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    content: fileContent,
+    message: 'Initial app setup'
+  })
+})
+.then(res => res.json())
+.then(data => {
+  console.log('File created:', data.file.path);
+  console.log('Public URL:', data.file.publicUrl);
+})</pre>
+                      
+                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
+                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+
+const content = `function greet(name) {
+  return \`Hello, \${name}!\`;
+}
+
+module.exports = { greet };`;
+
+await axios.post('http://localhost:4000/projects/6/contents/src/utils.js', {
+  content: content,
+  message: 'Add utility functions'
+}, {
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN',
+    'Content-Type': 'application/json'
+  }
+});
+
+console.log('File created successfully');</pre>
+                    </div>
+                  </details>
+                </div>
+              </div>
+            </div>
+
             <!-- Create Folder -->
             <div class="endpoint" data-endpoint-id="folder">
               <div class="endpoint-header" onclick="toggleEndpoint(this)">
@@ -3108,6 +3218,12 @@ await axios.delete('http://localhost:4000/projects/starred/6', {
               method: "GET",
               path: "/projects/search",
               id: "search",
+            },
+            {
+              title: "Create/Update File with Text Content",
+              method: "POST",
+              path: "/projects/:id/contents/*",
+              id: "create-file-text",
             },
             {
               title: "Create Folder",
@@ -4521,6 +4637,88 @@ await axios.delete('http://localhost:4000/projects/starred/6', {
 
             html += "</div>";
             element.innerHTML = html;
+          }
+
+          // Create folder function
+          async function createFileWithTextContent() {
+            const customToken = document
+              .getElementById("create-file-text-token")
+              .value.trim();
+            const token = customToken || getToken();
+            const projectId = document
+              .getElementById("create-file-text-project-id")
+              .value.trim();
+            const filePath = document
+              .getElementById("create-file-text-path")
+              .value.trim();
+            const content = document
+              .getElementById("create-file-text-content")
+              .value;
+            const message = document
+              .getElementById("create-file-text-message")
+              .value.trim();
+
+            if (!token) {
+              alert("Please provide a JWT token");
+              return;
+            }
+
+            if (!projectId) {
+              alert("Please provide a project ID");
+              return;
+            }
+
+            if (!filePath) {
+              alert("Please provide a file path");
+              return;
+            }
+
+            if (content === undefined || content === null || content === '') {
+              alert("Please provide file content");
+              return;
+            }
+
+            const responseElement = document.getElementById(
+              "create-file-text-response"
+            );
+            responseElement.innerHTML =
+              '<p style="color: #667eea;">Sending request...</p>';
+
+            try {
+              const response = await fetch(
+                `http://localhost:4000/projects/${projectId}/contents/${filePath}`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    content: content,
+                    message: message || `Create/update ${filePath}`,
+                  }),
+                }
+              );
+
+              const data = await response.json();
+
+              if (response.ok) {
+                let html = '<div style="color: #22c55e; padding: 12px; background: #1f3a1f; border-radius: 6px; margin-top: 12px;">';
+                html += `<p style="margin: 0 0 8px 0;"><strong>✓ Success!</strong> File created/updated</p>`;
+                html += `<p style="margin: 4px 0;"><strong>Path:</strong> ${data.file.path}</p>`;
+                html += `<p style="margin: 4px 0;"><strong>Size:</strong> ${data.file.size} bytes</p>`;
+                html += `<p style="margin: 4px 0;"><strong>Commit:</strong> ${data.file.commit.sha.substring(0, 7)}</p>`;
+                html += `<p style="margin: 4px 0;"><a href="${data.file.url}" target="_blank" style="color: #60a5fa;">View on GitHub</a></p>`;
+                html += `<p style="margin: 4px 0;"><strong>Public URL:</strong> <code style="background: #0f172a; padding: 2px 6px; border-radius: 3px; font-size: 0.9em;">${data.file.publicUrl}</code></p>`;
+                html += "</div>";
+                responseElement.innerHTML = html;
+              } else {
+                responseElement.innerHTML = `<div style="color: #ef4444; padding: 12px; background: #3a1f1f; border-radius: 6px; margin-top: 12px;"><p><strong>Error:</strong> ${data.error}</p><p style="font-size: 0.9em; color: #fca5a5;">${data.message || ''}</p></div>`;
+              }
+            } catch (error) {
+              responseElement.innerHTML = `<div style="color: #ef4444; padding: 12px; background: #3a1f1f; border-radius: 6px; margin-top: 12px;"><p><strong>Request Error:</strong> ${error.message}</p></div>`;
+              console.error("Create file error:", error);
+            }
           }
 
           // Create folder function

@@ -295,6 +295,127 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
   }
 });
 
+// Upload/Create file with text content
+router.post('/:id/contents/*', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const projectId = parseInt(req.params.id);
+    const path = req.params[0] || ''; // Get everything after /contents/
+    const { content, message } = req.body;
+
+    if (!path) {
+      return res.status(400).json({ error: 'File path is required' });
+    }
+
+    if (content === undefined || content === null) {
+      return res.status(400).json({ error: 'File content is required' });
+    }
+
+    // Get user's GitHub token
+    const ghp = await getUserGithubToken(userId);
+    if (!ghp) {
+      return res.status(401).json({ error: 'GitHub token not found. Please re-authenticate.' });
+    }
+
+    // Get project
+    const project = await prisma.project.findFirst({
+      where: { 
+        id: projectId,
+      },
+      include: {
+        user: {
+          select: { username: true }
+        }
+      }
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const octokit = new Octokit({ auth: ghp });
+    const repoName = (project.metadata as any)?.fullName?.split('/')[1] || project.name;
+    const owner = project.user.username;
+
+    // Convert content to base64
+    const contentBuffer = Buffer.from(content, 'utf-8');
+    const base64Content = contentBuffer.toString('base64');
+
+    try {
+      // Create or update file on GitHub
+      const { data } = await octokit.rest.repos.createOrUpdateFileContents({
+        owner,
+        repo: repoName,
+        path: path,
+        message: message || `Create/update ${path}`,
+        content: base64Content,
+      });
+
+      // Generate short code for file serving
+      let shortCode = generateShortCode();
+      let attempts = 0;
+      while (await prisma.shortUrl.findUnique({ where: { shortCode } })) {
+        shortCode = generateShortCode();
+        attempts++;
+        if (attempts > 10) {
+          shortCode = generateShortCode(8);
+        }
+      }
+
+      // Create short URL in database for direct file access
+      const shortUrl = await prisma.shortUrl.create({
+        data: {
+          shortCode,
+          originalUrl: data.content?.download_url || '',
+          userId
+        }
+      });
+
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const publicUrl = `${baseUrl}/f/${shortCode}`;
+
+      res.status(201).json({
+        message: 'File created/updated successfully',
+        file: {
+          path: path,
+          size: contentBuffer.length,
+          sha: data.content?.sha,
+          url: data.content?.html_url,
+          publicUrl: publicUrl,
+          downloadUrl: `${baseUrl}/s/${shortCode}`,
+          originalDownloadUrl: data.content?.download_url,
+          commit: {
+            sha: data.commit?.sha,
+            message: data.commit?.message,
+            url: data.commit?.html_url,
+          }
+        },
+      });
+    } catch (error: any) {
+      if (error.status === 401) {
+        return res.status(401).json({ 
+          error: 'GitHub authentication failed', 
+          message: 'Your GitHub token is invalid or has been revoked. Please log in again with a new token.',
+          details: error.message 
+        });
+      }
+      if (error.status === 404) {
+        return res.status(404).json({ error: 'Repository not found on GitHub' });
+      }
+      if (error.status === 422) {
+        return res.status(400).json({ error: 'Invalid file path or repository state' });
+      }
+      throw error;
+    }
+  } catch (error: any) {
+    console.error('Create file error:', error);
+    res.status(500).json({ 
+      error: 'Failed to create file',
+      message: error.message 
+    });
+  }
+});
+
 // Update project - updates GitHub repo name and database
 router.put('/:id', authenticate, async (req: AuthRequest, res: Response) => {
   try {
