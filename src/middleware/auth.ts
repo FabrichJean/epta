@@ -20,6 +20,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
       const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
       req.userId = decoded.userId;
       req.user = {id: req.userId};
+      
     } else if (apiKey) {
       // API Key authentication
       const validation = await validateApiKey(apiKey);

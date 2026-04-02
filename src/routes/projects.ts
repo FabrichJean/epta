@@ -647,6 +647,31 @@ router.post('/starred/:projectId', authenticate, async (req: AuthRequest, res: R
       return res.status(400).json({ error: 'File path is required' });
     }
 
+    // Verify user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    console.log({user, userId});
+    
+
+    if (!user) {
+      return res.status(401).json({ error: 'User not found or invalid token' });
+    }
+
+    // Verify project exists and belongs to user
+    const project = await prisma.project.findUnique({
+      where: { id: projectIdNum },
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    if (project.userId !== userId) {
+      return res.status(403).json({ error: 'You do not have permission to star files in this project' });
+    }
+
     // Check if file is already starred
     const existing = await prisma.stared.findFirst({
       where: { 
@@ -691,6 +716,28 @@ router.delete('/starred/:projectId', authenticate, async (req: AuthRequest, res:
 
     if (!path) {
       return res.status(400).json({ error: 'File path is required' });
+    }
+
+    // Verify user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: 'User not found or invalid token' });
+    }
+
+    // Verify project exists and belongs to user
+    const project = await prisma.project.findUnique({
+      where: { id: projectIdNum },
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    if (project.userId !== userId) {
+      return res.status(403).json({ error: 'You do not have permission to unstar files in this project' });
     }
 
     const stared = await prisma.stared.findFirst({
