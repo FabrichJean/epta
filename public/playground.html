@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>API Playground - EPTA</title>
+    <!-- Highlight.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <style>
       #playground-body {
         margin: 0;
@@ -999,6 +1002,115 @@
           min-width: unset;
         }
       }
+
+      /* Code Examples Tabs Styling */
+      #playground-body .code-tabs {
+        margin-top: 12px;
+        border-bottom: 1px solid #d1d9e0;
+      }
+
+      #playground-body .code-tabs-header {
+        display: flex;
+        gap: 0;
+        flex-wrap: wrap;
+      }
+
+      #playground-body .code-tab-button {
+        padding: 10px 16px;
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: #666;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+      }
+
+      #playground-body .code-tab-button:hover {
+        color: #667eea;
+        background: rgba(102, 126, 234, 0.05);
+      }
+
+      #playground-body .code-tab-button.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+      }
+
+      #playground-body .code-tab-content {
+        display: none;
+        animation: fadeIn 0.2s ease;
+      }
+
+      #playground-body .code-tab-content.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      #playground-body .code-tab-content pre {
+        margin-top: 12px;
+        border-radius: 6px !important;
+        padding: 12px !important;
+        background: #282c34 !important;
+        color: #abb2bf !important;
+        font-size: 0.85rem;
+        line-height: 1.4;
+        overflow-x: auto;
+      }
+
+      #playground-body .code-tab-content pre code {
+        color: inherit;
+        background: transparent;
+        padding: 0;
+        font-family: 'Courier New', Courier, monospace;
+      }
+
+      /* Highlight.js custom theme adjustments */
+      #playground-body .hljs {
+        background: #282c34 !important;
+        color: #abb2bf !important;
+      }
+
+      #playground-body .hljs-attr,
+      #playground-body .hljs-attribute {
+        color: #e06c75;
+      }
+
+      #playground-body .hljs-literal {
+        color: #56b6f2;
+      }
+
+      #playground-body .hljs-number {
+        color: #d19a66;
+      }
+
+      #playground-body .hljs-string {
+        color: #98c379;
+      }
+
+      #playground-body .hljs-title {
+        color: #61afef;
+      }
+
+      #playground-body .hljs-params {
+        color: #abb2bf;
+      }
+
+      #playground-body .hljs-built_in {
+        color: #e06c75;
+      }
+
+      #playground-body .hljs-keyword {
+        color: #c678dd;
+      }
     </style>
   </head>
   <body id="playground-body">
@@ -1114,16 +1226,21 @@
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
                   <details style="cursor: pointer;">
                     <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
-                    <div style="margin-top: 12px;">
-                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/auth/register \
+                    <div class="code-tabs">
+                      <div class="code-tabs-header">
+                        <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
+                      </div>
+                      <div class="code-tab-content active">
+                        <pre><code class="language-bash">curl -X POST http://localhost:4000/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "ghp": "ghp_xxxxxxxxxxxx"
-  }'</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/auth/register', {
+  }'</code></pre>
+                      </div>
+                      <div class="code-tab-content">
+                        <pre><code class="language-javascript">fetch('http://localhost:4000/auth/register', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -1134,16 +1251,17 @@
 .then(data => {
   localStorage.setItem('token', data.token);
   console.log('Registered:', data);
-})</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+})</code></pre>
+                      </div>
+                      <div class="code-tab-content">
+                        <pre><code class="language-javascript">const axios = require('axios');
 
 const response = await axios.post(
   'http://localhost:4000/auth/register',
   { ghp: 'ghp_xxxxxxxxxxxx' }
 );
-console.log('Token:', response.data.token);</pre>
+console.log('Token:', response.data.token);</code></pre>
+                      </div>
                     </div>
                   </details>
                 </div>
@@ -1173,16 +1291,21 @@ console.log('Token:', response.data.token);</pre>
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
                   <details style="cursor: pointer;">
                     <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
-                    <div style="margin-top: 12px;">
-                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/auth/login \
+                    <div class="code-tabs">
+                      <div class="code-tabs-header">
+                        <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
+                      </div>
+                      <div class="code-tab-content active">
+                        <pre><code class="language-bash">curl -X POST http://localhost:4000/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "ghp": "ghp_xxxxxxxxxxxx"
-  }'</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/auth/login', {
+  }'</code></pre>
+                      </div>
+                      <div class="code-tab-content">
+                        <pre><code class="language-javascript">fetch('http://localhost:4000/auth/login', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -1193,16 +1316,17 @@ console.log('Token:', response.data.token);</pre>
 .then(data => {
   localStorage.setItem('token', data.token);
   console.log('Logged in:', data);
-})</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+})</code></pre>
+                      </div>
+                      <div class="code-tab-content">
+                        <pre><code class="language-javascript">const axios = require('axios');
 
 const response = await axios.post(
   'http://localhost:4000/auth/login',
   { ghp: 'ghp_xxxxxxxxxxxx' }
 );
-console.log('Token:', response.data.token);</pre>
+console.log('Token:', response.data.token);</code></pre>
+                      </div>
                     </div>
                   </details>
                 </div>
@@ -1508,18 +1632,23 @@ console.log('Token:', response.data.token);</pre>
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
                   <details style="cursor: pointer;">
                     <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
-                    <div style="margin-top: 12px;">
-                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/projects \
+                    <div class="code-tabs">
+                      <div class="code-tabs-header">
+                        <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
+                      </div>
+                      <div class="code-tab-content active">
+                        <pre><code class="language-bash">curl -X POST http://localhost:4000/projects \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "my-awesome-project",
     "description": "A cool project"
-  }'</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects', {
+  }'</code></pre>
+                      </div>
+                      <div class="code-tab-content">
+                        <pre><code class="language-javascript">fetch('http://localhost:4000/projects', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_JWT_TOKEN',
@@ -1531,10 +1660,10 @@ console.log('Token:', response.data.token);</pre>
   })
 })
 .then(res => res.json())
-.then(data => console.log(data))</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+.then(data => console.log(data))</code></pre>
+                      </div>
+                      <div class="code-tab-content">
+                        <pre><code class="language-javascript">const axios = require('axios');
 
 const response = await axios.post(
   'http://localhost:4000/projects',
@@ -1548,7 +1677,8 @@ const response = await axios.post(
     }
   }
 );
-console.log(response.data);</pre>
+console.log(response.data);</code></pre>
+                      </div>
                     </div>
                   </details>
                 </div>
@@ -1663,17 +1793,20 @@ console.log(response.data);</pre>
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
                   <details style="cursor: pointer;">
                     <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
-                    <div style="margin-top: 12px;">
-                      <p style="font-weight: 500; margin-bottom: 8px;">cURL (Root Directory):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X GET http://localhost:4000/projects/6/contents/ \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">cURL (Specific Folder):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X GET http://localhost:4000/projects/6/contents/src \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">const projectId = '6';
+                    <div class="code-tabs">
+                      <div class="code-tabs-header">
+                        <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
+                      </div>
+                      <div class="code-tab-content active">
+                        <pre><code class="language-bash">curl -X GET http://localhost:4000/projects/6/contents/ \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"</code></pre>
+                        <pre><code class="language-bash">curl -X GET http://localhost:4000/projects/6/contents/src \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"</code></pre>
+                      </div>
+                      <div class="code-tab-content">
+                        <pre><code class="language-javascript">const projectId = '6';
 const path = 'src/components'; // or empty string for root
 
 fetch(`http://localhost:4000/projects/${projectId}/contents/${path}`, {
@@ -1683,10 +1816,10 @@ fetch(`http://localhost:4000/projects/${projectId}/contents/${path}`, {
   }
 })
 .then(res => res.json())
-.then(data => console.log(data))</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+.then(data => console.log(data))</code></pre>
+                      </div>
+                      <div class="code-tab-content">
+                        <pre><code class="language-javascript">const axios = require('axios');
 
 const projectId = '6';
 const path = 'src/utils'; // or empty for root
@@ -1699,7 +1832,8 @@ const response = await axios.get(
     }
   }
 );
-console.log(response.data);</pre>
+console.log(response.data);</code></pre>
+                      </div>
                     </div>
                   </details>
                 </div>
@@ -1811,15 +1945,40 @@ console.log(response.data);</pre>
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
                   <details style="cursor: pointer;">
                     <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
-                    <div style="margin-top: 12px;">
-                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/projects/6/upload \
+                    <div class="code-tabs">
+                      <div class="code-tabs-header">
+                        <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
+                      </div>
+                      <div class="code-tab-content active">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/projects/6/upload \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -F "file=@./myfile.txt" \
   -F "path=docs/myfile.txt"</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch with FormData):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">const fileInput = document.getElementById('fileInput');
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">const fileInput = document.getElementById('fileInput');
+const file = fileInput.files[0];
+const formData = new FormData();
+formData.append('file', file);
+formData.append('path', 'docs/myfile.txt');
+
+fetch('http://localhost:4000/projects/6/upload', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN'
+  },
+  body: formData
+})
+                      <div class="code-tab-content active">
+                        <pre><code class="language-bash">curl -X POST http://localhost:4000/projects/6/upload \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -F "file=@./myfile.txt" \
+  -F "path=docs/myfile.txt"</code></pre>
+                      </div>
+                      <div class="code-tab-content">
+                        <pre><code class="language-javascript">const fileInput = document.getElementById('fileInput');
 const file = fileInput.files[0];
 const formData = new FormData();
 formData.append('file', file);
@@ -1833,10 +1992,10 @@ fetch('http://localhost:4000/projects/6/upload', {
   body: formData
 })
 .then(res => res.json())
-.then(data => console.log(data))</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (FormData):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const fs = require('fs');
+.then(data => console.log(data))</code></pre>
+                      </div>
+                      <div class="code-tab-content">
+                        <pre><code class="language-javascript">const fs = require('fs');
 const FormData = require('form-data');
 const axios = require('axios');
 
@@ -1849,7 +2008,9 @@ await axios.post('http://localhost:4000/projects/6/upload', form, {
     'Authorization': 'Bearer YOUR_JWT_TOKEN',
     ...form.getHeaders()
   }
-});</pre>
+});</code></pre>
+                      </div>
+                      </div>
                     </div>
                   </details>
                 </div>
@@ -1963,18 +2124,23 @@ await axios.post('http://localhost:4000/projects/6/upload', form, {
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
                   <details style="cursor: pointer;">
                     <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
-                    <div style="margin-top: 12px;">
-                      <p style="font-weight: 500; margin-bottom: 8px;">cURL (Raw Content):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X PUT http://localhost:4000/projects/6/contents/README.md \
+                    <div class="code-tabs">
+                      <div class="code-tabs-header">
+                        <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
+                      </div>
+                      <div class="code-tab-content active">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X PUT http://localhost:4000/projects/6/contents/README.md \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "content": "# My Project\nUpdated content...",
     "message": "Update README"
   }'</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/6/contents/README.md', {
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/6/contents/README.md', {
   method: 'PUT',
   headers: {
     'Authorization': 'Bearer YOUR_JWT_TOKEN',
@@ -1987,9 +2153,9 @@ await axios.post('http://localhost:4000/projects/6/upload', form, {
 })
 .then(res => res.json())
 .then(data => console.log(data))</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
 
 await axios.put(
   'http://localhost:4000/projects/6/contents/README.md',
@@ -2003,6 +2169,7 @@ await axios.put(
     }
   }
 );</pre>
+                      </div>
                     </div>
                   </details>
                 </div>
@@ -2053,17 +2220,22 @@ await axios.put(
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
                   <details style="cursor: pointer;">
                     <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
-                    <div style="margin-top: 12px;">
-                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X DELETE http://localhost:4000/projects/6/contents/myfile.json \
+                    <div class="code-tabs">
+                      <div class="code-tabs-header">
+                        <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
+                      </div>
+                      <div class="code-tab-content active">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X DELETE http://localhost:4000/projects/6/contents/myfile.json \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "message": "Delete old file"
   }'</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/6/contents/myfile.json', {
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/6/contents/myfile.json', {
   method: 'DELETE',
   headers: {
     'Authorization': 'Bearer YOUR_JWT_TOKEN',
@@ -2075,9 +2247,9 @@ await axios.put(
 })
 .then(res => res.json())
 .then(data => console.log(data))</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
 
 await axios.delete(
   'http://localhost:4000/projects/6/contents/myfile.json',
@@ -2090,6 +2262,7 @@ await axios.delete(
     }
   }
 );</pre>
+                      </div>
                     </div>
                   </details>
                 </div>
@@ -2168,17 +2341,22 @@ await axios.delete(
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
                   <details style="cursor: pointer;">
                     <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
-                    <div style="margin-top: 12px;">
-                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/url/shorten \
+                    <div class="code-tabs">
+                      <div class="code-tabs-header">
+                        <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
+                      </div>
+                      <div class="code-tab-content active">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/url/shorten \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "url": "https://example.com/very/long/url"
   }'</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/url/shorten', {
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/url/shorten', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_JWT_TOKEN',
@@ -2190,9 +2368,9 @@ await axios.delete(
 })
 .then(res => res.json())
 .then(data => console.log('Short code:', data.shortCode))</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
 
 const response = await axios.post(
   'http://localhost:4000/url/shorten',
@@ -2206,6 +2384,7 @@ const response = await axios.post(
   }
 );
 console.log('Visit:', response.data.visitUrl);</pre>
+                      </div>
                     </div>
                   </details>
                 </div>
@@ -2357,17 +2536,20 @@ console.log('Visit:', response.data.visitUrl);</pre>
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
                   <details style="cursor: pointer;">
                     <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
-                    <div style="margin-top: 12px;">
-                      <p style="font-weight: 500; margin-bottom: 8px;">cURL (Search all projects):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X GET "http://localhost:4000/projects/search?keyword=utils&depth=2" \
+                    <div class="code-tabs">
+                      <div class="code-tabs-header">
+                        <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
+                      </div>
+                      <div class="code-tab-content active">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X GET "http://localhost:4000/projects/search?keyword=utils&depth=2" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">cURL (Search specific project):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X GET "http://localhost:4000/projects/search?keyword=component&projectId=6&depth=3" \
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X GET "http://localhost:4000/projects/search?keyword=component&projectId=6&depth=3" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">const keyword = 'utils';
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">const keyword = 'utils';
 const depth = '2';
 const projectId = '6'; // optional
 
@@ -2384,9 +2566,9 @@ fetch(`http://localhost:4000/projects/search?${params}`, {
 })
 .then(res => res.json())
 .then(data => console.log(data))</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
 
 const response = await axios.get(
   'http://localhost:4000/projects/search',
@@ -2402,6 +2584,7 @@ const response = await axios.get(
   }
 );
 console.log(response.data);</pre>
+                      </div>
                     </div>
                   </details>
                 </div>
@@ -2462,18 +2645,23 @@ console.log(response.data);</pre>
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
                   <details style="cursor: pointer;">
                     <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
-                    <div style="margin-top: 12px;">
-                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/projects/6/contents/src/app.js \
+                    <div class="code-tabs">
+                      <div class="code-tabs-header">
+                        <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
+                      </div>
+                      <div class="code-tab-content active">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/projects/6/contents/src/app.js \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "content": "console.log(\"Hello World\");",
     "message": "Initial app setup"
   }'</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">const fileContent = `console.log("Hello World");`;
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">const fileContent = `console.log("Hello World");`;
 
 fetch('http://localhost:4000/projects/6/contents/src/app.js', {
   method: 'POST',
@@ -2491,9 +2679,9 @@ fetch('http://localhost:4000/projects/6/contents/src/app.js', {
   console.log('File created:', data.file.path);
   console.log('Public URL:', data.file.publicUrl);
 })</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
 
 const content = `function greet(name) {
   return \`Hello, \${name}!\`;
@@ -2512,6 +2700,7 @@ await axios.post('http://localhost:4000/projects/6/contents/src/utils.js', {
 });
 
 console.log('File created successfully');</pre>
+                      </div>
                     </div>
                   </details>
                 </div>
@@ -2585,17 +2774,22 @@ console.log('File created successfully');</pre>
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
                   <details style="cursor: pointer;">
                     <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
-                    <div style="margin-top: 12px;">
-                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/projects/6/folders/src/components \
+                    <div class="code-tabs">
+                      <div class="code-tabs-header">
+                        <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
+                      </div>
+                      <div class="code-tab-content active">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/projects/6/folders/src/components \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "message": "Create component folder structure"
   }'</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/6/folders/src/components', {
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/6/folders/src/components', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_JWT_TOKEN',
@@ -2607,9 +2801,9 @@ console.log('File created successfully');</pre>
 })
 .then(res => res.json())
 .then(data => console.log(data))</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
 
 await axios.post(
   'http://localhost:4000/projects/6/folders/src/components',
@@ -2622,6 +2816,7 @@ await axios.post(
     }
   }
 );</pre>
+                      </div>
                     </div>
                   </details>
                 </div>
@@ -2746,9 +2941,14 @@ await axios.post(
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
                   <details style="cursor: pointer;">
                     <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
-                    <div style="margin-top: 12px;">
-                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X DELETE http://localhost:4000/projects/6/contents \
+                    <div class="code-tabs">
+                      <div class="code-tabs-header">
+                        <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
+                      </div>
+                      <div class="code-tab-content active">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X DELETE http://localhost:4000/projects/6/contents \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -2758,9 +2958,9 @@ await axios.post(
       "docs/readme.md"
     ]
   }'</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/6/contents', {
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/6/contents', {
   method: 'DELETE',
   headers: {
     'Authorization': 'Bearer YOUR_JWT_TOKEN',
@@ -2776,9 +2976,9 @@ await axios.post(
 })
 .then(res => res.json())
 .then(data => console.log(data))</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
 
 await axios.delete(
   'http://localhost:4000/projects/6/contents',
@@ -2795,6 +2995,7 @@ await axios.delete(
     }
   }
 );</pre>
+                      </div>
                     </div>
                   </details>
                 </div>
@@ -2827,13 +3028,18 @@ await axios.delete(
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
                   <details style="cursor: pointer;">
                     <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
-                    <div style="margin-top: 12px;">
-                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X GET http://localhost:4000/projects/starred/list \
+                    <div class="code-tabs">
+                      <div class="code-tabs-header">
+                        <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
+                      </div>
+                      <div class="code-tab-content active">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X GET http://localhost:4000/projects/starred/list \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/starred/list', {
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/starred/list', {
   method: 'GET',
   headers: {
     'Authorization': 'Bearer YOUR_JWT_TOKEN'
@@ -2841,9 +3047,9 @@ await axios.delete(
 })
 .then(res => res.json())
 .then(data => console.log(data))</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
 
 const response = await axios.get(
   'http://localhost:4000/projects/starred/list',
@@ -2854,6 +3060,7 @@ const response = await axios.get(
   }
 );
 console.log(response.data);</pre>
+                      </div>
                     </div>
                   </details>
                 </div>
@@ -2902,13 +3109,18 @@ console.log(response.data);</pre>
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
                   <details style="cursor: pointer;">
                     <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
-                    <div style="margin-top: 12px;">
-                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X GET "http://localhost:4000/projects/starred/check/6/src%2Fcomponents%2FButton.tsx" \
+                    <div class="code-tabs">
+                      <div class="code-tabs-header">
+                        <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
+                      </div>
+                      <div class="code-tab-content active">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X GET "http://localhost:4000/projects/starred/check/6/src%2Fcomponents%2FButton.tsx" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">const projectId = '6';
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">const projectId = '6';
 const path = 'src/components/Button.tsx';
 const encodedPath = encodeURIComponent(path);
 
@@ -2920,9 +3132,9 @@ fetch(`http://localhost:4000/projects/starred/check/${projectId}/${encodedPath}`
 })
 .then(res => res.json())
 .then(data => console.log(data))</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
 
 const projectId = '6';
 const path = 'src/components/Button.tsx';
@@ -2936,6 +3148,7 @@ const response = await axios.get(
   }
 );
 console.log(response.data);</pre>
+                      </div>
                     </div>
                   </details>
                 </div>
@@ -2984,17 +3197,22 @@ console.log(response.data);</pre>
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
                   <details style="cursor: pointer;">
                     <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
-                    <div style="margin-top: 12px;">
-                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/projects/starred/6 \
+                    <div class="code-tabs">
+                      <div class="code-tabs-header">
+                        <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
+                      </div>
+                      <div class="code-tab-content active">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/projects/starred/6 \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "path": "src/components/Button.tsx"
   }'</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/starred/6', {
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/starred/6', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_JWT_TOKEN',
@@ -3006,9 +3224,9 @@ console.log(response.data);</pre>
 })
 .then(res => res.json())
 .then(data => console.log(data))</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
 
 await axios.post('http://localhost:4000/projects/starred/6', {
   path: 'src/components/Button.tsx'
@@ -3017,6 +3235,7 @@ await axios.post('http://localhost:4000/projects/starred/6', {
     'Authorization': 'Bearer YOUR_JWT_TOKEN'
   }
 });</pre>
+                      </div>
                     </div>
                   </details>
                 </div>
@@ -3065,17 +3284,22 @@ await axios.post('http://localhost:4000/projects/starred/6', {
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
                   <details style="cursor: pointer;">
                     <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
-                    <div style="margin-top: 12px;">
-                      <p style="font-weight: 500; margin-bottom: 8px;">cURL:</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X DELETE http://localhost:4000/projects/starred/6 \
+                    <div class="code-tabs">
+                      <div class="code-tabs-header">
+                        <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
+                      </div>
+                      <div class="code-tab-content active">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X DELETE http://localhost:4000/projects/starred/6 \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "path": "src/components/Button.tsx"
   }'</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">JavaScript (Fetch):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/starred/6', {
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/starred/6', {
   method: 'DELETE',
   headers: {
     'Authorization': 'Bearer YOUR_JWT_TOKEN',
@@ -3087,9 +3311,9 @@ await axios.post('http://localhost:4000/projects/starred/6', {
 })
 .then(res => res.json())
 .then(data => console.log(data))</pre>
-                      
-                      <p style="font-weight: 500; margin-bottom: 8px;">Node.js (axios):</p>
-                      <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
 
 await axios.delete('http://localhost:4000/projects/starred/6', {
   data: {
@@ -3099,6 +3323,7 @@ await axios.delete('http://localhost:4000/projects/starred/6', {
     'Authorization': 'Bearer YOUR_JWT_TOKEN'
   }
 });</pre>
+                      </div>
                     </div>
                   </details>
                 </div>
@@ -3412,6 +3637,58 @@ await axios.delete('http://localhost:4000/projects/starred/6', {
           function setToken(token) {
             tokenInput.value = token;
             localStorage.setItem("epta_token", token);
+          }
+
+          // Code tab switching function
+          function switchCodeTab(event, button) {
+            event.preventDefault();
+            const tabsContainer = button.closest('.code-tabs');
+            const allButtons = tabsContainer.querySelectorAll('.code-tab-button');
+            const allContents = tabsContainer.querySelectorAll('.code-tab-content');
+            const tabIndex = Array.from(allButtons).indexOf(button);
+
+            // Remove active class from all buttons and contents
+            allButtons.forEach(btn => btn.classList.remove('active'));
+            allContents.forEach(content => content.classList.remove('active'));
+
+            // Add active class to clicked button and corresponding content
+            button.classList.add('active');
+            allContents[tabIndex].classList.add('active');
+            
+            // Re-apply syntax highlighting to the newly visible tab
+            const activeContent = allContents[tabIndex];
+            const codeBlock = activeContent.querySelector('code');
+            if (codeBlock && window.hljs) {
+              hljs.highlightElement(codeBlock);
+            }
+          }
+
+          // Apply syntax highlighting to all code blocks
+          function applySyntaxHighlighting() {
+            const codeBlocks = document.querySelectorAll('#playground-body pre code');
+            codeBlocks.forEach((block) => {
+              // Detect language from parent's content or default to bash/shell
+              let language = 'bash';
+              const preElement = block.parentElement;
+              
+              // Try to detect language from code content
+              const code = block.textContent;
+              if (code.includes('fetch(') || code.includes('async function') || code.includes('.then(')) {
+                language = 'javascript';
+              } else if (code.includes('curl ') || code.includes('-H ') || code.includes('-d ')) {
+                language = 'bash';
+              } else if (code.includes('const ') || code.includes('require(') || code.includes('await ')) {
+                language = 'javascript';
+              }
+              
+              // Add language class if not present
+              if (!block.className.includes('language-')) {
+                block.className = `language-${language}`;
+              }
+              
+              // Apply highlight.js
+              hljs.highlightElement(block);
+            });
           }
 
           function toggleEndpoint(header) {
@@ -5220,6 +5497,7 @@ await axios.delete('http://localhost:4000/projects/starred/6', {
           function initializeApp() {
             loadTokenFromLocalStorage();
             initializeFromQueryParams();
+            applySyntaxHighlighting();
           }
 
           window.addEventListener("DOMContentLoaded", initializeApp);
