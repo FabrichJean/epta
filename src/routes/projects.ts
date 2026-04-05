@@ -710,14 +710,100 @@ router.get('/starred/list', authenticate, async (req: AuthRequest, res: Response
   try {
     const userId = req.userId!;
 
+    // Get user's GitHub token
+    const ghp = await getUserGithubToken(userId);
+    if (!ghp) {
+      return res.status(401).json({ error: 'GitHub token not found. Please re-authenticate.' });
+    }
+
     const stareds = await prisma.stared.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
+      include: {
+        project: {
+          select: {
+            id: true,
+            name: true,
+            metadata: true,
+            user: {
+              select: { username: true }
+            }
+          }
+        }
+      }
     });
 
+    const octokit = new Octokit({ auth: ghp });
+
+    // Fetch detailed information for each starred file from GitHub
+    const starredFiles = await Promise.all(
+      stareds.map(async (stared) => {
+        try {
+          const project = stared.project;
+          const repoName = (project.metadata as any)?.fullName?.split('/')[1] || project.name;
+          const owner = project.user.username;
+
+          const { data } = await octokit.rest.repos.getContent({
+            owner,
+            repo: repoName,
+            path: stared.path
+          });
+
+          // If it's a file, return the detailed structure
+          if (!Array.isArray(data)) {
+            const fileData: any = data;
+            
+            // Check if a public URL already exists for this file
+            let publicUrl = null;
+            const existingShortUrl = await prisma.shortUrl.findFirst({
+              where: {
+                originalUrl: fileData.download_url,
+                userId
+              }
+            });
+
+            if (existingShortUrl) {
+              publicUrl = `${process.env.BASE_URL || 'http://localhost:4000'}/f/${existingShortUrl.shortCode}`;
+            } else {
+              // Generate new public URL
+              const shortCode = generateShortCode();
+              const shortUrl = await prisma.shortUrl.create({
+                data: {
+                  shortCode,
+                  originalUrl: fileData.download_url,
+                  userId
+                }
+              });
+              publicUrl = `${process.env.BASE_URL || 'http://localhost:4000'}/f/${shortCode}`;
+            }
+
+            return {
+              type: 'file',
+              name: fileData.name,
+              path: fileData.path,
+              size: fileData.size,
+              sha: fileData.sha,
+              url: fileData.html_url,
+              downloadUrl: fileData.download_url,
+              publicUrl: publicUrl,
+              isStarred: true
+            };
+          }
+
+          return null;
+        } catch (error: any) {
+          console.error(`Error fetching starred file ${stared.path}:`, error);
+          return null;
+        }
+      })
+    );
+
+    // Filter out any null entries (files that couldn't be fetched)
+    const validStarredFiles = starredFiles.filter(file => file !== null);
+
     res.json({ 
-      count: stareds.length,
-      stareds 
+      count: validStarredFiles.length,
+      stareds: validStarredFiles
     });
   } catch (error: any) {
     console.error('Get starred files error:', error);
