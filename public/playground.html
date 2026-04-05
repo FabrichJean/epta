@@ -3876,19 +3876,66 @@ await axios.delete('http://localhost:4000/projects/starred/6', {
                 copyBtn.onclick = function(e) {
                   e.preventDefault();
                   const codeText = block.textContent;
-                  navigator.clipboard.writeText(codeText).then(() => {
-                    copyBtn.textContent = '✓ Copied!';
-                    copyBtn.classList.add('copied');
-                    setTimeout(() => {
-                      copyBtn.textContent = '📋 Copy';
-                      copyBtn.classList.remove('copied');
-                    }, 2000);
-                  });
+                  
+                  // Try Clipboard API first
+                  if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(codeText)
+                      .then(() => {
+                        showCopySuccess(copyBtn);
+                      })
+                      .catch(() => {
+                        // Fallback if Clipboard API fails (e.g., in iframe)
+                        fallbackCopyToClipboard(codeText, copyBtn);
+                      });
+                  } else {
+                    // Fallback for older browsers or restricted contexts
+                    fallbackCopyToClipboard(codeText, copyBtn);
+                  }
                 };
                 preElement.style.position = 'relative';
                 preElement.appendChild(copyBtn);
               }
             });
+          }
+          
+          // Function to show copy success feedback
+          function showCopySuccess(copyBtn) {
+            copyBtn.textContent = '✓ Copied!';
+            copyBtn.classList.add('copied');
+            setTimeout(() => {
+              copyBtn.textContent = '📋 Copy';
+              copyBtn.classList.remove('copied');
+            }, 2000);
+          }
+          
+          // Fallback copy method for restricted contexts (iframe, etc)
+          function fallbackCopyToClipboard(text, copyBtn) {
+            // Create a temporary textarea element
+            const tempTextarea = document.createElement('textarea');
+            tempTextarea.value = text;
+            tempTextarea.style.position = 'fixed';
+            tempTextarea.style.opacity = '0';
+            tempTextarea.style.pointerEvents = 'none';
+            document.body.appendChild(tempTextarea);
+            
+            try {
+              // Select and copy the text
+              tempTextarea.select();
+              tempTextarea.setSelectionRange(0, 99999); // For mobile devices
+              document.execCommand('copy');
+              showCopySuccess(copyBtn);
+            } catch (err) {
+              // If all else fails, show a message
+              copyBtn.textContent = '⚠️ Unable to copy';
+              copyBtn.style.background = '#d19a66';
+              setTimeout(() => {
+                copyBtn.textContent = '📋 Copy';
+                copyBtn.style.background = '';
+              }, 2000);
+            } finally {
+              // Clean up
+              document.body.removeChild(tempTextarea);
+            }
           }
 
           function toggleEndpoint(header) {
