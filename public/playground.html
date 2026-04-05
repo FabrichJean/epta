@@ -1064,6 +1064,36 @@
         font-size: 0.85rem;
         line-height: 1.4;
         overflow-x: auto;
+        position: relative;
+      }
+
+      #playground-body .code-copy-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: #0969da;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 6px 12px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        opacity: 0;
+        transition: all 0.2s ease;
+        font-weight: 500;
+      }
+
+      #playground-body .code-tab-content pre:hover .code-copy-btn {
+        opacity: 1;
+      }
+
+      #playground-body .code-copy-btn:hover {
+        background: #0860ca;
+        transform: translateY(-1px);
+      }
+
+      #playground-body .code-copy-btn.copied {
+        background: #28a745;
       }
 
       #playground-body .code-tab-content pre code {
@@ -1230,6 +1260,7 @@
                       <div class="code-tabs-header">
                         <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Python</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
                       </div>
                       <div class="code-tab-content active">
@@ -1252,6 +1283,16 @@
   localStorage.setItem('token', data.token);
   console.log('Registered:', data);
 })</code></pre>
+                      </div>
+                      <div class="code-tab-content">
+                        <pre><code class="language-python">import requests
+
+response = requests.post(
+    'http://localhost:4000/auth/register',
+    json={'ghp': 'ghp_xxxxxxxxxxxx'}
+)
+data = response.json()
+print('Token:', data.get('token'))</code></pre>
                       </div>
                       <div class="code-tab-content">
                         <pre><code class="language-javascript">const axios = require('axios');
@@ -1295,6 +1336,7 @@ console.log('Token:', response.data.token);</code></pre>
                       <div class="code-tabs-header">
                         <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Python</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
                       </div>
                       <div class="code-tab-content active">
@@ -1317,6 +1359,16 @@ console.log('Token:', response.data.token);</code></pre>
   localStorage.setItem('token', data.token);
   console.log('Logged in:', data);
 })</code></pre>
+                      </div>
+                      <div class="code-tab-content">
+                        <pre><code class="language-python">import requests
+
+response = requests.post(
+    'http://localhost:4000/auth/login',
+    json={'ghp': 'ghp_xxxxxxxxxxxx'}
+)
+data = response.json()
+print('Token:', data.get('token'))</code></pre>
                       </div>
                       <div class="code-tab-content">
                         <pre><code class="language-javascript">const axios = require('axios');
@@ -1636,6 +1688,7 @@ console.log('Token:', response.data.token);</code></pre>
                       <div class="code-tabs-header">
                         <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Python</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
                       </div>
                       <div class="code-tab-content active">
@@ -1661,6 +1714,19 @@ console.log('Token:', response.data.token);</code></pre>
 })
 .then(res => res.json())
 .then(data => console.log(data))</code></pre>
+                      </div>
+                      <div class="code-tab-content">
+                        <pre><code class="language-python">import requests
+
+response = requests.post(
+    'http://localhost:4000/projects',
+    headers={'Authorization': 'Bearer YOUR_JWT_TOKEN'},
+    json={
+        'name': 'my-awesome-project',
+        'description': 'A cool project'
+    }
+)
+print(response.json())</code></pre>
                       </div>
                       <div class="code-tab-content">
                         <pre><code class="language-javascript">const axios = require('axios');
@@ -1797,6 +1863,7 @@ console.log(response.data);</code></pre>
                       <div class="code-tabs-header">
                         <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Python</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
                       </div>
                       <div class="code-tab-content active">
@@ -1817,6 +1884,18 @@ fetch(`http://localhost:4000/projects/${projectId}/contents/${path}`, {
 })
 .then(res => res.json())
 .then(data => console.log(data))</code></pre>
+                      </div>
+                      <div class="code-tab-content">
+                        <pre><code class="language-python">import requests
+
+project_id = '6'
+path = 'src/components'  # or empty string for root
+
+response = requests.get(
+    f'http://localhost:4000/projects/{project_id}/contents/{path}',
+    headers={'Authorization': 'Bearer YOUR_JWT_TOKEN'}
+)
+print(response.json())</code></pre>
                       </div>
                       <div class="code-tab-content">
                         <pre><code class="language-javascript">const axios = require('axios');
@@ -1949,16 +2028,17 @@ console.log(response.data);</code></pre>
                       <div class="code-tabs-header">
                         <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Python</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
                       </div>
                       <div class="code-tab-content active">
-                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/projects/6/upload \
+                        <pre><code class="language-bash">curl -X POST http://localhost:4000/projects/6/upload \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -F "file=@./myfile.txt" \
-  -F "path=docs/myfile.txt"</pre>
+  -F "path=docs/myfile.txt"</code></pre>
                       </div>
                       <div class="code-tab-content">
-                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">const fileInput = document.getElementById('fileInput');
+                        <pre><code class="language-javascript">const fileInput = document.getElementById('fileInput');
 const file = fileInput.files[0];
 const formData = new FormData();
 formData.append('file', file);
@@ -1971,6 +2051,38 @@ fetch('http://localhost:4000/projects/6/upload', {
   },
   body: formData
 })
+.then(res => res.json())
+.then(data => console.log(data))</code></pre>
+                      </div>
+                      <div class="code-tab-content">
+                        <pre><code class="language-python">import requests
+
+files = {'file': open('./myfile.txt', 'rb')}
+data = {'path': 'docs/myfile.txt'}
+
+response = requests.post(
+    'http://localhost:4000/projects/6/upload',
+    headers={'Authorization': 'Bearer YOUR_JWT_TOKEN'},
+    files=files,
+    data=data
+)
+print(response.json())</code></pre>
+                      </div>
+                      <div class="code-tab-content">
+                        <pre><code class="language-javascript">const fs = require('fs');
+const FormData = require('form-data');
+const axios = require('axios');
+
+const form = new FormData();
+form.append('file', fs.createReadStream('./myfile.txt'));
+form.append('path', 'docs/myfile.txt');
+
+await axios.post('http://localhost:4000/projects/6/upload', form, {
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN',
+    ...form.getHeaders()
+  }
+});</code></pre>
                       <div class="code-tab-content active">
                         <pre><code class="language-bash">curl -X POST http://localhost:4000/projects/6/upload \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
@@ -2345,6 +2457,7 @@ await axios.delete(
                       <div class="code-tabs-header">
                         <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Python</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
                       </div>
                       <div class="code-tab-content active">
@@ -2368,6 +2481,16 @@ await axios.delete(
 })
 .then(res => res.json())
 .then(data => console.log('Short code:', data.shortCode))</pre>
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">import requests
+
+response = requests.post(
+    'http://localhost:4000/url/shorten',
+    headers={'Authorization': 'Bearer YOUR_JWT_TOKEN'},
+    json={'url': 'https://example.com/very/long/url'}
+)
+print('Short code:', response.json().get('shortCode'))</pre>
                       </div>
                       <div class="code-tab-content">
                         <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
@@ -2540,11 +2663,67 @@ console.log('Visit:', response.data.visitUrl);</pre>
                       <div class="code-tabs-header">
                         <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
+                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Python</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
                       </div>
                       <div class="code-tab-content active">
                         <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X GET "http://localhost:4000/projects/search?keyword=utils&depth=2" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"</pre>
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X GET "http://localhost:4000/projects/search?keyword=component&projectId=6&depth=3" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"</pre>
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">const keyword = 'utils';
+const depth = '2';
+const projectId = '6'; // optional
+
+const params = new URLSearchParams();
+params.append('keyword', keyword);
+params.append('depth', depth);
+if (projectId) params.append('projectId', projectId);
+
+fetch(`http://localhost:4000/projects/search?${params}`, {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN'
+  }
+})
+.then(res => res.json())
+.then(data => console.log(data))</pre>
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">import requests
+
+params = {
+    'keyword': 'utils',
+    'depth': 2,
+    'projectId': 6  # optional
+}
+
+response = requests.get(
+    'http://localhost:4000/projects/search',
+    params=params,
+    headers={'Authorization': 'Bearer YOUR_JWT_TOKEN'}
+)
+print(response.json())</pre>
+                      </div>
+                      <div class="code-tab-content">
+                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+
+const response = await axios.get(
+  'http://localhost:4000/projects/search',
+  {
+    params: {
+      keyword: 'utils',
+      depth: 2,
+      projectId: 6 // optional
+    },
+    headers: {
+      'Authorization': 'Bearer YOUR_JWT_TOKEN'
+    }
+  }
+);
+console.log(response.data);</pre>
                         <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X GET "http://localhost:4000/projects/search?keyword=component&projectId=6&depth=3" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"</pre>
                       </div>
@@ -3688,6 +3867,27 @@ await axios.delete('http://localhost:4000/projects/starred/6', {
               
               // Apply highlight.js
               hljs.highlightElement(block);
+              
+              // Add copy button if not already present
+              if (!preElement.querySelector('.code-copy-btn')) {
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'code-copy-btn';
+                copyBtn.textContent = '📋 Copy';
+                copyBtn.onclick = function(e) {
+                  e.preventDefault();
+                  const codeText = block.textContent;
+                  navigator.clipboard.writeText(codeText).then(() => {
+                    copyBtn.textContent = '✓ Copied!';
+                    copyBtn.classList.add('copied');
+                    setTimeout(() => {
+                      copyBtn.textContent = '📋 Copy';
+                      copyBtn.classList.remove('copied');
+                    }, 2000);
+                  });
+                };
+                preElement.style.position = 'relative';
+                preElement.appendChild(copyBtn);
+              }
             });
           }
 
