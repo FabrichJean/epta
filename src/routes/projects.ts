@@ -185,17 +185,39 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
       if (!Array.isArray(data)) {
         const fileData: any = data;
         
-        // Generate permanent public URL for this file
-        const shortCode = generateShortCode();
-        const publicUrl = `${req.protocol}://${req.get('host')}/f/${shortCode}`;
-        
-        await prisma.shortUrl.create({
-          data: {
-            shortCode,
+        // Check if short URL already exists for this file
+        let shortUrl = await prisma.shortUrl.findFirst({
+          where: {
             originalUrl: fileData.download_url,
             userId
           }
         });
+        
+        // Generate permanent public URL for this file if it doesn't exist
+        let shortCode = shortUrl?.shortCode;
+        if (!shortUrl) {
+          shortCode = generateShortCode();
+          let attempts = 0;
+          
+          // Ensure the short code is unique
+          while (await prisma.shortUrl.findUnique({ where: { shortCode } })) {
+            shortCode = generateShortCode();
+            attempts++;
+            if (attempts > 10) {
+              shortCode = generateShortCode(8);
+            }
+          }
+          
+          shortUrl = await prisma.shortUrl.create({
+            data: {
+              shortCode,
+              originalUrl: fileData.download_url,
+              userId
+            }
+          });
+        }
+        
+        const publicUrl = `${req.protocol}://${req.get('host')}/f/${shortCode}`;
         
         // Check if file is starred
         const stared = await prisma.stared.findFirst({
@@ -215,6 +237,7 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
           url: fileData.html_url,
           downloadUrl: fileData.download_url,
           publicUrl: publicUrl, // Permanent public URL
+          shortCode,
           content: fileData.content, // Base64 encoded content
           encoding: fileData.encoding,
           isStarred: !!stared // Whether the file is starred
@@ -228,16 +251,38 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
         
         // Generate publicUrl only for files, not directories
         if (item.type === 'file' && item.download_url) {
-          const shortCode = generateShortCode();
-          publicUrl = `${req.protocol}://${req.get('host')}/f/${shortCode}`;
-          
-          await prisma.shortUrl.create({
-            data: {
-              shortCode,
+          // Check if short URL already exists for this file
+          let shortUrl = await prisma.shortUrl.findFirst({
+            where: {
               originalUrl: item.download_url,
               userId
             }
           });
+          
+          // Create short URL if it doesn't exist
+          if (!shortUrl) {
+            let shortCode = generateShortCode();
+            let attempts = 0;
+            
+            // Ensure the short code is unique
+            while (await prisma.shortUrl.findUnique({ where: { shortCode } })) {
+              shortCode = generateShortCode();
+              attempts++;
+              if (attempts > 10) {
+                shortCode = generateShortCode(8);
+              }
+            }
+            
+            shortUrl = await prisma.shortUrl.create({
+              data: {
+                shortCode,
+                originalUrl: item.download_url,
+                userId
+              }
+            });
+          }
+          
+          publicUrl = `${req.protocol}://${req.get('host')}/f/${shortUrl.shortCode}`;
         }
         
         // Check if file is starred
