@@ -1421,9 +1421,9 @@ console.log('Token:', response.data.token);</code></pre>
                 
                 <!-- Code Examples -->
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
-                  <details>
-                    <summary style="cursor: pointer; font-weight: 600; color: #0969da;">📋 Code Examples</summary>
-                    <div class="code-tabs" style="margin-top: 12px;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div class="code-tabs">
                       <div class="code-tabs-header">
                         <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
@@ -1473,7 +1473,8 @@ await axios.put(
       'Authorization': 'Bearer YOUR_JWT_TOKEN'
     }
   }
-);</code></pre>
+);
+console.log('Token updated successfully');</code></pre>
                       </div>
                     </div>
                   </details>
@@ -1507,9 +1508,9 @@ await axios.put(
                 
                 <!-- Code Examples -->
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
-                  <details>
-                    <summary style="cursor: pointer; font-weight: 600; color: #0969da;">📋 Code Examples</summary>
-                    <div class="code-tabs" style="margin-top: 12px;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div class="code-tabs">
                       <div class="code-tabs-header">
                         <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
@@ -1751,9 +1752,9 @@ console.log('Current user:', response.data);</code></pre>
                 
                 <!-- Code Examples -->
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
-                  <details>
-                    <summary style="cursor: pointer; font-weight: 600; color: #0969da;">📋 Code Examples</summary>
-                    <div class="code-tabs" style="margin-top: 12px;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div class="code-tabs">
                       <div class="code-tabs-header">
                         <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
@@ -1770,7 +1771,9 @@ console.log('Current user:', response.data);</code></pre>
                       <div class="code-tab-content">
                         <pre><code class="language-javascript">fetch('http://localhost:4000/api/github-info', {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+  headers: {
+    'Content-Type': 'application/json'
+  },
   body: JSON.stringify({
     ghp: 'ghp_xxxxxxxxxxxx'
   })
@@ -1939,9 +1942,9 @@ console.log(response.data);</code></pre>
                 
                 <!-- Code Examples -->
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
-                  <details>
-                    <summary style="cursor: pointer; font-weight: 600; color: #0969da;">📋 Code Examples</summary>
-                    <div class="code-tabs" style="margin-top: 12px;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div class="code-tabs">
                       <div class="code-tabs-header">
                         <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
@@ -1960,7 +1963,7 @@ console.log(response.data);</code></pre>
   }
 })
 .then(res => res.json())
-.then(data => console.log('All projects:', data))</code></pre>
+.then(data => console.log('Projects:', data))</code></pre>
                       </div>
                       <div class="code-tab-content">
                         <pre><code class="language-python">import requests
@@ -1969,7 +1972,7 @@ response = requests.get(
     'http://localhost:4000/projects',
     headers={'Authorization': 'Bearer YOUR_JWT_TOKEN'}
 )
-print('All projects:', response.json())</code></pre>
+print('Projects:', response.json())</code></pre>
                       </div>
                       <div class="code-tab-content">
                         <pre><code class="language-javascript">const axios = require('axios');
@@ -1982,7 +1985,7 @@ const response = await axios.get(
     }
   }
 );
-console.log('All projects:', response.data);</code></pre>
+console.log('Projects:', response.data);</code></pre>
                       </div>
                     </div>
                   </details>
@@ -2020,9 +2023,9 @@ console.log('All projects:', response.data);</code></pre>
                 
                 <!-- Code Examples -->
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
-                  <details>
-                    <summary style="cursor: pointer; font-weight: 600; color: #0969da;">📋 Code Examples</summary>
-                    <div class="code-tabs" style="margin-top: 12px;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div class="code-tabs">
                       <div class="code-tabs-header">
                         <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
@@ -2034,9 +2037,7 @@ console.log('All projects:', response.data);</code></pre>
   -H "Authorization: Bearer YOUR_JWT_TOKEN"</code></pre>
                       </div>
                       <div class="code-tab-content">
-                        <pre><code class="language-javascript">const projectId = '6';
-
-fetch(`http://localhost:4000/projects/${projectId}`, {
+                        <pre><code class="language-javascript">fetch('http://localhost:4000/projects/6', {
   method: 'GET',
   headers: {
     'Authorization': 'Bearer YOUR_JWT_TOKEN'
@@ -2048,10 +2049,8 @@ fetch(`http://localhost:4000/projects/${projectId}`, {
                       <div class="code-tab-content">
                         <pre><code class="language-python">import requests
 
-project_id = '6'
-
 response = requests.get(
-    f'http://localhost:4000/projects/{project_id}',
+    'http://localhost:4000/projects/6',
     headers={'Authorization': 'Bearer YOUR_JWT_TOKEN'}
 )
 print('Project:', response.json())</code></pre>
@@ -2059,10 +2058,8 @@ print('Project:', response.json())</code></pre>
                       <div class="code-tab-content">
                         <pre><code class="language-javascript">const axios = require('axios');
 
-const projectId = '6';
-
 const response = await axios.get(
-  `http://localhost:4000/projects/${projectId}`,
+  'http://localhost:4000/projects/6',
   {
     headers: {
       'Authorization': 'Bearer YOUR_JWT_TOKEN'
@@ -2235,9 +2232,9 @@ console.log(response.data);</code></pre>
                 
                 <!-- Code Examples -->
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
-                  <details>
-                    <summary style="cursor: pointer; font-weight: 600; color: #0969da;">📋 Code Examples</summary>
-                    <div class="code-tabs" style="margin-top: 12px;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div class="code-tabs">
                       <div class="code-tabs-header">
                         <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
@@ -2249,7 +2246,7 @@ console.log(response.data);</code></pre>
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "updated-project",
+    "name": "updated-project-name",
     "description": "Updated description"
   }'</code></pre>
                       </div>
@@ -2261,12 +2258,12 @@ console.log(response.data);</code></pre>
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
-    name: 'updated-project',
+    name: 'updated-project-name',
     description: 'Updated description'
   })
 })
 .then(res => res.json())
-.then(data => console.log('Updated:', data))</code></pre>
+.then(data => console.log('Project updated:', data))</code></pre>
                       </div>
                       <div class="code-tab-content">
                         <pre><code class="language-python">import requests
@@ -2275,11 +2272,11 @@ response = requests.put(
     'http://localhost:4000/projects/6',
     headers={'Authorization': 'Bearer YOUR_JWT_TOKEN'},
     json={
-        'name': 'updated-project',
+        'name': 'updated-project-name',
         'description': 'Updated description'
     }
 )
-print('Updated:', response.json())</code></pre>
+print('Project updated:', response.json())</code></pre>
                       </div>
                       <div class="code-tab-content">
                         <pre><code class="language-javascript">const axios = require('axios');
@@ -2287,7 +2284,7 @@ print('Updated:', response.json())</code></pre>
 await axios.put(
   'http://localhost:4000/projects/6',
   {
-    name: 'updated-project',
+    name: 'updated-project-name',
     description: 'Updated description'
   },
   {
@@ -2295,7 +2292,8 @@ await axios.put(
       'Authorization': 'Bearer YOUR_JWT_TOKEN'
     }
   }
-);</code></pre>
+);
+console.log('Project updated successfully');</code></pre>
                       </div>
                     </div>
                   </details>
@@ -2755,9 +2753,9 @@ await axios.delete(
                 
                 <!-- Code Examples -->
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
-                  <details>
-                    <summary style="cursor: pointer; font-weight: 600; color: #0969da;">📋 Code Examples</summary>
-                    <div class="code-tabs" style="margin-top: 12px;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div class="code-tabs">
                       <div class="code-tabs-header">
                         <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
@@ -2766,26 +2764,35 @@ await axios.delete(
                       </div>
                       <div class="code-tab-content active">
                         <pre><code class="language-bash">curl -X DELETE http://localhost:4000/projects/6 \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"</code></pre>
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "deleteFromGithub": true
+  }'</code></pre>
                       </div>
                       <div class="code-tab-content">
                         <pre><code class="language-javascript">fetch('http://localhost:4000/projects/6', {
   method: 'DELETE',
   headers: {
-    'Authorization': 'Bearer YOUR_JWT_TOKEN'
-  }
+    'Authorization': 'Bearer YOUR_JWT_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    deleteFromGithub: true
+  })
 })
 .then(res => res.json())
-.then(data => console.log('Deleted:', data))</code></pre>
+.then(data => console.log('Project deleted:', data))</code></pre>
                       </div>
                       <div class="code-tab-content">
                         <pre><code class="language-python">import requests
 
 response = requests.delete(
     'http://localhost:4000/projects/6',
-    headers={'Authorization': 'Bearer YOUR_JWT_TOKEN'}
+    headers={'Authorization': 'Bearer YOUR_JWT_TOKEN'},
+    json={'deleteFromGithub': True}
 )
-print('Deleted:', response.json())</code></pre>
+print('Project deleted:', response.json())</code></pre>
                       </div>
                       <div class="code-tab-content">
                         <pre><code class="language-javascript">const axios = require('axios');
@@ -2793,11 +2800,15 @@ print('Deleted:', response.json())</code></pre>
 await axios.delete(
   'http://localhost:4000/projects/6',
   {
+    data: {
+      deleteFromGithub: true
+    },
     headers: {
       'Authorization': 'Bearer YOUR_JWT_TOKEN'
     }
   }
-);</code></pre>
+);
+console.log('Project deleted successfully');</code></pre>
                       </div>
                     </div>
                   </details>
@@ -2929,9 +2940,9 @@ console.log('Visit:', response.data.visitUrl);</pre>
                 
                 <!-- Code Examples -->
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
-                  <details>
-                    <summary style="cursor: pointer; font-weight: 600; color: #0969da;">📋 Code Examples</summary>
-                    <div class="code-tabs" style="margin-top: 12px;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div class="code-tabs">
                       <div class="code-tabs-header">
                         <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
@@ -2950,7 +2961,7 @@ console.log('Visit:', response.data.visitUrl);</pre>
   }
 })
 .then(res => res.json())
-.then(data => console.log('My URLs:', data))</code></pre>
+.then(data => console.log('Your URLs:', data))</code></pre>
                       </div>
                       <div class="code-tab-content">
                         <pre><code class="language-python">import requests
@@ -2959,7 +2970,7 @@ response = requests.get(
     'http://localhost:4000/url/my-urls',
     headers={'Authorization': 'Bearer YOUR_JWT_TOKEN'}
 )
-print('My URLs:', response.json())</code></pre>
+print('Your URLs:', response.json())</code></pre>
                       </div>
                       <div class="code-tab-content">
                         <pre><code class="language-javascript">const axios = require('axios');
@@ -2972,7 +2983,7 @@ const response = await axios.get(
     }
   }
 );
-console.log('My URLs:', response.data);</code></pre>
+console.log('Your URLs:', response.data);</code></pre>
                       </div>
                     </div>
                   </details>
@@ -3014,9 +3025,9 @@ console.log('My URLs:', response.data);</code></pre>
                 
                 <!-- Code Examples -->
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #d1d9e0;">
-                  <details>
-                    <summary style="cursor: pointer; font-weight: 600; color: #0969da;">📋 Code Examples</summary>
-                    <div class="code-tabs" style="margin-top: 12px;">
+                  <details style="cursor: pointer;">
+                    <summary style="font-weight: 600; margin-bottom: 12px; user-select: none;">📝 Code Examples</summary>
+                    <div class="code-tabs">
                       <div class="code-tabs-header">
                         <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
@@ -3035,7 +3046,7 @@ console.log('My URLs:', response.data);</code></pre>
   }
 })
 .then(res => res.json())
-.then(data => console.log('Deleted:', data))</code></pre>
+.then(data => console.log('URL deleted:', data))</code></pre>
                       </div>
                       <div class="code-tab-content">
                         <pre><code class="language-python">import requests
@@ -3044,7 +3055,7 @@ response = requests.delete(
     'http://localhost:4000/url/abc123',
     headers={'Authorization': 'Bearer YOUR_JWT_TOKEN'}
 )
-print('Deleted:', response.json())</code></pre>
+print('URL deleted:', response.json())</code></pre>
                       </div>
                       <div class="code-tab-content">
                         <pre><code class="language-javascript">const axios = require('axios');
@@ -3056,7 +3067,8 @@ await axios.delete(
       'Authorization': 'Bearer YOUR_JWT_TOKEN'
     }
   }
-);</code></pre>
+);
+console.log('URL deleted successfully');</code></pre>
                       </div>
                     </div>
                   </details>
@@ -3317,7 +3329,6 @@ console.log(response.data);</pre>
                       <div class="code-tabs-header">
                         <button class="code-tab-button active" onclick="switchCodeTab(event, this)">cURL</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">JavaScript</button>
-                        <button class="code-tab-button" onclick="switchCodeTab(event, this)">Python</button>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
                       </div>
                       <div class="code-tab-content active">
@@ -3349,47 +3360,6 @@ fetch('http://localhost:4000/projects/6/contents/src/app.js', {
   console.log('Public URL:', data.file.publicUrl);
 })</pre>
                       </div>
-                      <div class="code-tab-content">
-                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">import requests
-
-file_content = 'console.log("Hello World");'
-
-response = requests.post(
-    'http://localhost:4000/projects/6/contents/src/app.js',
-    headers={'Authorization': 'Bearer YOUR_JWT_TOKEN'},
-    json={
-        'content': file_content,
-        'message': 'Initial app setup'
-    }
-)
-data = response.json()
-print('File created:', data.get('file', {}).get('path'))
-print('Public URL:', data.get('file', {}).get('publicUrl'))</pre>
-                      </div>
-                      <div class="code-tab-content">
-                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
-
-const content = `function greet(name) {
-  return \`Hello, \${name}!\`;
-}
-
-module.exports = { greet };`;
-
-await axios.post('http://localhost:4000/projects/6/contents/src/utils.js', {
-  content: content,
-  message: 'Add utility functions'
-}, {
-  headers: {
-    'Authorization': 'Bearer YOUR_JWT_TOKEN',
-    'Content-Type': 'application/json'
-  }
-});
-
-console.log('File created successfully');</pre>
-                      </div>
-                    </div>
-                  </details>
-                </div>
                       <div class="code-tab-content">
                         <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
 
@@ -3492,15 +3462,15 @@ console.log('File created successfully');</pre>
                         <button class="code-tab-button" onclick="switchCodeTab(event, this)">Node.js</button>
                       </div>
                       <div class="code-tab-content active">
-                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">curl -X POST http://localhost:4000/projects/6/folders/src/components \
+                        <pre><code class="language-bash">curl -X POST http://localhost:4000/projects/6/folders/src/components \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "message": "Create component folder structure"
-  }'</pre>
+  }'</code></pre>
                       </div>
                       <div class="code-tab-content">
-                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem; margin-bottom: 12px;">fetch('http://localhost:4000/projects/6/folders/src/components', {
+                        <pre><code class="language-javascript">fetch('http://localhost:4000/projects/6/folders/src/components', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_JWT_TOKEN',
@@ -3511,20 +3481,20 @@ console.log('File created successfully');</pre>
   })
 })
 .then(res => res.json())
-.then(data => console.log(data))</pre>
+.then(data => console.log(data))</code></pre>
                       </div>
                       <div class="code-tab-content">
-                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">import requests
+                        <pre><code class="language-python">import requests
 
 response = requests.post(
     'http://localhost:4000/projects/6/folders/src/components',
     headers={'Authorization': 'Bearer YOUR_JWT_TOKEN'},
     json={'message': 'Create component folder structure'}
 )
-print(response.json())</pre>
+print(response.json())</code></pre>
                       </div>
                       <div class="code-tab-content">
-                        <pre style="background: #24292f; color: #f0f6fc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.7rem;">const axios = require('axios');
+                        <pre><code class="language-javascript">const axios = require('axios');
 
 await axios.post(
   'http://localhost:4000/projects/6/folders/src/components',
@@ -3536,7 +3506,7 @@ await axios.post(
       'Authorization': 'Bearer YOUR_JWT_TOKEN'
     }
   }
-);</pre>
+);</code></pre>
                       </div>
                     </div>
                   </details>
@@ -4459,7 +4429,7 @@ await axios.delete('http://localhost:4000/projects/starred/6', {
             tempTextarea.style.opacity = '0';
             tempTextarea.style.pointerEvents = 'none';
             document.body.appendChild(tempTextarea);
-
+            
             try {
               // Select and copy the text
               tempTextarea.select();
