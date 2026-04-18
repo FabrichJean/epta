@@ -244,7 +244,10 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
       }
 
       // If it's a directory, return list of contents with publicUrl for files
-      const contents = await Promise.all(data.map(async (item: any) => {
+      const contents = await Promise.all(
+        data
+          .filter((item: any) => item.name !== '.keep') // Filter out .keep files
+          .map(async (item: any) => {
         let publicUrl = null;
         let isStarred = false;
         
@@ -307,12 +310,16 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
           publicUrl: publicUrl, // Permanent public URL for files only
           isStarred: isStarred // Whether the file is starred
         };
-      }));
+      })
+      );
+      
+      // Filter out any null/undefined entries
+      const filteredContents = contents.filter(item => item !== null);
 
       res.json({
         type: 'dir',
         path: path || '/',
-        contents: contents
+        contents: filteredContents
       });
     } catch (error: any) {
       if (error.status === 401) {
@@ -455,6 +462,100 @@ router.post('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respo
     console.error('Create file error:', error);
     res.status(500).json({ 
       error: 'Failed to create file',
+      message: error.message 
+    });
+  }
+});
+
+router.post('/:id/folders/*', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const projectId = parseInt(req.params.id);
+    const folderPath = req.params[0]; // Get everything after /folders/
+    const { message } = req.body;
+
+    if (!folderPath) {
+      return res.status(400).json({ error: 'Folder path is required' });
+    }
+
+    // Get user's GitHub token
+    const ghp = await getUserGithubToken(userId);
+    if (!ghp) {
+      return res.status(401).json({ error: 'GitHub token not found. Please re-authenticate.' });
+    }
+
+    // Get project and verify ownership
+    const project = await prisma.project.findFirst({
+      where: { 
+        id: projectId,
+        userId 
+      },
+      include: {
+        user: {
+          select: { username: true }
+        }
+      }
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const octokit = new Octokit({ auth: ghp });
+    const repoName = (project.metadata as any)?.fullName?.split('/')[1] || project.name;
+    const owner = project.user.username;
+
+    // Create folder by adding a .keep file
+    const cleanPath = folderPath.replace(/\/+$/, ''); // Remove trailing slashes
+    const keepFilePath = `${cleanPath}/.keep`;
+    const commitMessage = message || `Create folder structure: ${cleanPath}`;
+
+    try {
+      // Create empty .keep file to establish the folder structure
+      const { data } = await octokit.rest.repos.createOrUpdateFileContents({
+        owner,
+        repo: repoName,
+        path: keepFilePath,
+        message: commitMessage,
+        content: '', // Empty content (base64 encoded empty string)
+      });
+
+      res.status(201).json({
+        message: 'Folder created successfully',
+        folder: {
+          path: cleanPath,
+          file: {
+            path: data.content?.path,
+            sha: data.content?.sha,
+            url: data.content?.html_url,
+          },
+          commit: {
+            sha: data.commit?.sha,
+            message: data.commit?.message,
+            url: data.commit?.html_url,
+          }
+        }
+      });
+    } catch (error: any) {
+      if (error.status === 401) {
+        return res.status(401).json({ 
+          error: 'GitHub authentication failed', 
+          message: 'Your GitHub token is invalid or has been revoked. Please log in again with a new token.',
+          details: error.message 
+        });
+      }
+      if (error.status === 404) {
+        return res.status(404).json({ error: 'Repository not found on GitHub' });
+      }
+      if (error.status === 422) {
+        return res.status(400).json({ error: 'Invalid folder path or repository state' });
+      }
+      throw error;
+    }
+  } catch (error: any) {
+    console.error('Create folder error:', error);
+    res.status(500).json({ 
+      error: 'Failed to create folder',
       message: error.message 
     });
   }
