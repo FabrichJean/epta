@@ -200,7 +200,7 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
           let attempts = 0;
           
           // Ensure the short code is unique
-          while (await prisma.shortUrl.findUnique({ where: { shortCode } })) {
+          while (await prisma.shortUrl.findUnique({ where: { shortCode, originalUrl: fileData.download_url} })) {
             shortCode = generateShortCode();
             attempts++;
             if (attempts > 10) {
@@ -238,15 +238,18 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
           downloadUrl: fileData.download_url,
           publicUrl: publicUrl, // Permanent public URL
           shortCode,
-          content: fileData.content, // Base64 encoded content
           encoding: fileData.encoding,
           isStarred: !!stared // Whether the file is starred
         });
       }
 
       // If it's a directory, return list of contents with publicUrl for files
-      const contents = await Promise.all(data.map(async (item: any) => {
+      const contents = await Promise.all(
+        data
+          .filter((item: any) => item.name !== '.keep') // Filter out .keep files
+          .map(async (item: any) => {
         let publicUrl = null;
+        let shortCode = null;
         let isStarred = false;
         
         // Generate publicUrl only for files, not directories
@@ -261,11 +264,11 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
           
           // Create short URL if it doesn't exist
           if (!shortUrl) {
-            let shortCode = generateShortCode();
+            shortCode = generateShortCode();
             let attempts = 0;
             
             // Ensure the short code is unique
-            while (await prisma.shortUrl.findUnique({ where: { shortCode } })) {
+            while (await prisma.shortUrl.findUnique({ where: { shortCode, originalUrl: item.download_url } })) {
               shortCode = generateShortCode();
               attempts++;
               if (attempts > 10) {
@@ -282,7 +285,8 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
             });
           }
           
-          publicUrl = `${req.protocol}://${req.get('host')}/f/${shortUrl.shortCode}`;
+          shortCode = shortUrl.shortCode;
+          publicUrl = `${req.protocol}://${req.get('host')}/f/${shortCode}`;
         }
         
         // Check if file is starred
@@ -306,14 +310,19 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
           url: item.html_url,
           downloadUrl: item.download_url,
           publicUrl: publicUrl, // Permanent public URL for files only
+          shortCode: shortCode, // shortCode for files only
           isStarred: isStarred // Whether the file is starred
         };
-      }));
+      })
+      );
+      
+      // Filter out any null/undefined entries
+      const filteredContents = contents.filter(item => item !== null);
 
       res.json({
         type: 'dir',
         path: path || '/',
-        contents: contents
+        contents: filteredContents
       });
     } catch (error: any) {
       if (error.status === 401) {
@@ -396,28 +405,38 @@ router.post('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respo
         content: base64Content,
       });
 
-      // Generate short code for file serving
-      let shortCode = generateShortCode();
-      let attempts = 0;
-      while (await prisma.shortUrl.findUnique({ where: { shortCode } })) {
-        shortCode = generateShortCode();
-        attempts++;
-        if (attempts > 10) {
-          shortCode = generateShortCode(8);
-        }
-      }
-
-      // Create short URL in database for direct file access
-      const shortUrl = await prisma.shortUrl.create({
-        data: {
-          shortCode,
+      // Check if short URL already exists for this file
+      let shortUrl = await prisma.shortUrl.findFirst({
+        where: {
           originalUrl: data.content?.download_url || '',
           userId
         }
       });
 
+      // Generate short code for file serving only if it doesn't exist
+      if (!shortUrl) {
+        let shortCode = generateShortCode();
+        let attempts = 0;
+        while (await prisma.shortUrl.findUnique({ where: { shortCode } })) {
+          shortCode = generateShortCode();
+          attempts++;
+          if (attempts > 10) {
+            shortCode = generateShortCode(8);
+          }
+        }
+
+        // Create short URL in database for direct file access
+        shortUrl = await prisma.shortUrl.create({
+          data: {
+            shortCode,
+            originalUrl: data.content?.download_url || '',
+            userId
+          }
+        });
+      }
+
       const baseUrl = `${req.protocol}://${req.get('host')}`;
-      const publicUrl = `${baseUrl}/f/${shortCode}`;
+      const publicUrl = `${baseUrl}/f/${shortUrl.shortCode}`;
 
       res.status(201).json({
         message: 'File created/updated successfully',
@@ -427,7 +446,7 @@ router.post('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respo
           sha: data.content?.sha,
           url: data.content?.html_url,
           publicUrl: publicUrl,
-          downloadUrl: `${baseUrl}/s/${shortCode}`,
+          downloadUrl: `${baseUrl}/s/${shortUrl.shortCode}`,
           originalDownloadUrl: data.content?.download_url,
           commit: {
             sha: data.commit?.sha,
@@ -456,6 +475,100 @@ router.post('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respo
     console.error('Create file error:', error);
     res.status(500).json({ 
       error: 'Failed to create file',
+      message: error.message 
+    });
+  }
+});
+
+router.post('/:id/folders/*', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const projectId = parseInt(req.params.id);
+    const folderPath = req.params[0]; // Get everything after /folders/
+    const { message } = req.body;
+
+    if (!folderPath) {
+      return res.status(400).json({ error: 'Folder path is required' });
+    }
+
+    // Get user's GitHub token
+    const ghp = await getUserGithubToken(userId);
+    if (!ghp) {
+      return res.status(401).json({ error: 'GitHub token not found. Please re-authenticate.' });
+    }
+
+    // Get project and verify ownership
+    const project = await prisma.project.findFirst({
+      where: { 
+        id: projectId,
+        userId 
+      },
+      include: {
+        user: {
+          select: { username: true }
+        }
+      }
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const octokit = new Octokit({ auth: ghp });
+    const repoName = (project.metadata as any)?.fullName?.split('/')[1] || project.name;
+    const owner = project.user.username;
+
+    // Create folder by adding a .keep file
+    const cleanPath = folderPath.replace(/\/+$/, ''); // Remove trailing slashes
+    const keepFilePath = `${cleanPath}/.keep`;
+    const commitMessage = message || `Create folder structure: ${cleanPath}`;
+
+    try {
+      // Create empty .keep file to establish the folder structure
+      const { data } = await octokit.rest.repos.createOrUpdateFileContents({
+        owner,
+        repo: repoName,
+        path: keepFilePath,
+        message: commitMessage,
+        content: '', // Empty content (base64 encoded empty string)
+      });
+
+      res.status(201).json({
+        message: 'Folder created successfully',
+        folder: {
+          path: cleanPath,
+          file: {
+            path: data.content?.path,
+            sha: data.content?.sha,
+            url: data.content?.html_url,
+          },
+          commit: {
+            sha: data.commit?.sha,
+            message: data.commit?.message,
+            url: data.commit?.html_url,
+          }
+        }
+      });
+    } catch (error: any) {
+      if (error.status === 401) {
+        return res.status(401).json({ 
+          error: 'GitHub authentication failed', 
+          message: 'Your GitHub token is invalid or has been revoked. Please log in again with a new token.',
+          details: error.message 
+        });
+      }
+      if (error.status === 404) {
+        return res.status(404).json({ error: 'Repository not found on GitHub' });
+      }
+      if (error.status === 422) {
+        return res.status(400).json({ error: 'Invalid folder path or repository state' });
+      }
+      throw error;
+    }
+  } catch (error: any) {
+    console.error('Create folder error:', error);
+    res.status(500).json({ 
+      error: 'Failed to create folder',
       message: error.message 
     });
   }
@@ -687,28 +800,38 @@ router.post('/:projectId/upload', authenticate, upload.single('file'), async (re
         content: content,
       });
 
-      // Generate short code for file serving
-      let shortCode = generateShortCode();
-      let attempts = 0;
-      while (await prisma.shortUrl.findUnique({ where: { shortCode } })) {
-        shortCode = generateShortCode();
-        attempts++;
-        if (attempts > 10) {
-          shortCode = generateShortCode(8);
-        }
-      }
-
-      // Create short URL in database for direct file access
-      const shortUrl = await prisma.shortUrl.create({
-        data: {
-          shortCode,
+      // Check if short URL already exists for this file
+      let shortUrl = await prisma.shortUrl.findFirst({
+        where: {
           originalUrl: data.content?.download_url || '',
           userId
         }
       });
 
+      // Generate short code for file serving only if it doesn't exist
+      if (!shortUrl) {
+        let shortCode = generateShortCode();
+        let attempts = 0;
+        while (await prisma.shortUrl.findUnique({ where: { shortCode } })) {
+          shortCode = generateShortCode();
+          attempts++;
+          if (attempts > 10) {
+            shortCode = generateShortCode(8);
+          }
+        }
+
+        // Create short URL in database for direct file access
+        shortUrl = await prisma.shortUrl.create({
+          data: {
+            shortCode,
+            originalUrl: data.content?.download_url || '',
+            userId
+          }
+        });
+      }
+
       const baseUrl = `${req.protocol}://${req.get('host')}`;
-      const publicUrl = `${baseUrl}/f/${shortCode}`;
+      const publicUrl = `${baseUrl}/f/${shortUrl.shortCode}`;
 
       res.json({
         message: 'File uploaded successfully',
@@ -719,7 +842,7 @@ router.post('/:projectId/upload', authenticate, upload.single('file'), async (re
           sha: data.content?.sha,
           url: data.content?.html_url,
           publicUrl: publicUrl,  // Public permanent link
-          downloadUrl: `${baseUrl}/s/${shortCode}`,  // Redirect link
+          downloadUrl: `${baseUrl}/s/${shortUrl.shortCode}`,  // Redirect link
           originalDownloadUrl: data.content?.download_url,
         },
       });
@@ -800,6 +923,7 @@ router.get('/starred/list', authenticate, async (req: AuthRequest, res: Response
             
             // Check if a public URL already exists for this file
             let publicUrl = null;
+            let shortCode = null;
             const existingShortUrl = await prisma.shortUrl.findFirst({
               where: {
                 originalUrl: fileData.download_url,
@@ -808,10 +932,11 @@ router.get('/starred/list', authenticate, async (req: AuthRequest, res: Response
             });
 
             if (existingShortUrl) {
-              publicUrl = `${process.env.BASE_URL || 'http://localhost:4000'}/f/${existingShortUrl.shortCode}`;
+              shortCode = existingShortUrl.shortCode;
+              publicUrl = `${process.env.BASE_URL || 'http://localhost:4000'}/f/${shortCode}`;
             } else {
               // Generate new public URL
-              const shortCode = generateShortCode();
+              shortCode = generateShortCode();
               const shortUrl = await prisma.shortUrl.create({
                 data: {
                   shortCode,
@@ -831,6 +956,7 @@ router.get('/starred/list', authenticate, async (req: AuthRequest, res: Response
               url: fileData.html_url,
               downloadUrl: fileData.download_url,
               publicUrl: publicUrl,
+              shortCode: shortCode,
               isStarred: true
             };
           }
