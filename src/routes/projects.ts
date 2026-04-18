@@ -238,7 +238,6 @@ router.get('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respon
           downloadUrl: fileData.download_url,
           publicUrl: publicUrl, // Permanent public URL
           shortCode,
-          content: fileData.content, // Base64 encoded content
           encoding: fileData.encoding,
           isStarred: !!stared // Whether the file is starred
         });
