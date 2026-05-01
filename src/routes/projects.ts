@@ -990,8 +990,6 @@ router.post('/:projectId/upload', authenticate, upload.single('file'), async (re
         },
       });
     } catch (error: any) {
-      // console.log(error);
-      
       if (error.status === 401) {
         return res.status(401).json({ 
           error: 'GitHub authentication failed', 
@@ -1171,10 +1169,7 @@ router.post('/starred/:projectId', authenticate, async (req: AuthRequest, res: R
     // Verify user exists
     const user = await prisma.user.findUnique({
       where: { id: userId },
-    });
-
-    console.log({user, userId});
-    
+    });    
 
     if (!user) {
       return res.status(401).json({ error: 'User not found or invalid token' });
