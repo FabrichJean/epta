@@ -1,0 +1,228 @@
+# @epta/auth-client
+
+A TypeScript client library for interacting with the EPTA Auth API. Provides type-safe methods for authentication, token management, and API key operations.
+
+## Installation
+
+```bash
+npm install @epta/auth-client axios
+```
+
+## Usage
+
+### Basic Setup
+
+```typescript
+import { EptaAuthClient } from "@epta/auth-client";
+
+const client = new EptaAuthClient("http://localhost:3000/api");
+```
+
+### Authentication
+
+#### Register a new user
+
+```typescript
+try {
+  const response = await client.register("your_github_personal_token");
+  console.log("User registered:", response.user);
+  // Token is automatically stored
+} catch (error) {
+  console.error("Registration failed:", error.message);
+}
+```
+
+#### Login
+
+```typescript
+try {
+  const response = await client.login("your_github_personal_token");
+  console.log("Login successful:", response.user);
+  // Token is automatically stored
+} catch (error) {
+  console.error("Login failed:", error.message);
+}
+```
+
+#### Get current user
+
+```typescript
+try {
+  const user = await client.getCurrentUser();
+  console.log("Current user:", user);
+} catch (error) {
+  console.error("Failed to fetch user:", error.message);
+}
+```
+
+### Token Management
+
+```typescript
+// Set a token from local storage or previous session
+client.setToken("your_jwt_token");
+
+// Get the current token
+const token = client.getToken();
+
+// Clear the token
+client.clearToken();
+```
+
+### Update GitHub Token
+
+```typescript
+try {
+  const response = await client.updateGitHubToken("new_github_personal_token");
+  console.log("GitHub token updated for:", response.user.username);
+} catch (error) {
+  console.error("Failed to update GitHub token:", error.message);
+}
+```
+
+### API Key Management
+
+
+```typescript
+// Set a apikey from local storage or previous session
+client.setApiKey("your_api_key");
+
+// Get the current apikey
+const apiKey = client.getApiKey();
+
+// Clear the token
+client.clearApiKey();
+```
+
+#### Create an API key
+
+```typescript
+try {
+  const response = await client.createApiKey("My API Key", 30);
+  console.log("API Key created:", response.apiKey);
+  console.log("Key preview:", response.keyInfo.keyPreview);
+  console.log("Save this key now:", response.warning);
+} catch (error) {
+  console.error("Failed to create API key:", error.message);
+}
+```
+
+#### Get all API keys
+
+```typescript
+try {
+  const response = await client.getApiKeys();
+  console.log("Total API keys:", response.total);
+  console.log("Active keys:", response.active);
+  console.log("All keys:", response.apiKeys);
+
+  // Keys have status: 'active', 'expired', or 'disabled'
+  response.apiKeys.forEach((key) => {
+    console.log(`${key.name} - ${key.status}`);
+  });
+} catch (error) {
+  console.error("Failed to fetch API keys:", error.message);
+}
+```
+
+#### Toggle an API key (enable/disable)
+
+```typescript
+try {
+  const response = await client.toggleApiKey(1);
+  console.log(
+    "API key is now:",
+    response.apiKey?.status === "active" ? "enabled" : "disabled"
+  );
+} catch (error) {
+  console.error("Failed to toggle API key:", error.message);
+}
+```
+
+#### Regenerate an API key
+
+```typescript
+try {
+  // Regenerate with same expiration
+  const response = await client.regenerateApiKey(1);
+  console.log("New API key:", response.key);
+
+  // Or regenerate with new expiration
+  const response2 = await client.regenerateApiKey(1, 60);
+  console.log("API key regenerated for 60 more days");
+} catch (error) {
+  console.error("Failed to regenerate API key:", error.message);
+}
+```
+
+#### Delete an API key
+
+```typescript
+try {
+  const response = await client.deleteApiKey(1);
+  console.log(
+    `API key "${response.deletedKey?.name}" has been deleted`
+  );
+} catch (error) {
+  console.error("Failed to delete API key:", error.message);
+}
+```
+
+## Error Handling
+
+All methods return promises and throw errors with descriptive messages:
+
+```typescript
+try {
+  await client.login("invalid_token");
+} catch (error) {
+  if (error instanceof Error) {
+    console.error("Error message:", error.message);
+    console.error("Status:", (error as any).status);
+    console.error("Response data:", (error as any).data);
+  }
+}
+```
+
+## Types
+
+The package exports TypeScript types for all API responses:
+
+```typescript
+import type {
+  User,
+  AuthResponse,
+  ApiKeyInfo,
+  ApiKeyWithStatus,
+  ApiKeysListResponse,
+  CreateApiKeyResponse,
+  ApiKeyActionResponse,
+  UpdateTokenResponse,
+  ErrorResponse,
+} from "@epta/auth-client";
+```
+
+## API Endpoints
+
+### Authentication
+
+- `POST /auth/register` - Register with GitHub Personal Token
+- `POST /auth/login` - Login with GitHub Personal Token
+- `GET /auth` - Get current user (requires authentication)
+- `PUT /auth/update-token` - Update GitHub token
+
+### API Keys
+
+- `POST /auth/api-keys` - Create a new API key
+- `GET /auth/api-keys` - Get all API keys
+- `PATCH /auth/api-keys/:id/toggle` - Enable/disable an API key
+- `PATCH /auth/api-keys/:id/regenerate` - Regenerate an API key
+- `DELETE /auth/api-keys/:id` - Delete an API key
+
+## Requirements
+
+- Node.js >= 14
+- TypeScript >= 4.0 (for development)
+
+## License
+
+ISC

@@ -16,6 +16,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@epta/auth-client": "file:package",
     "@octokit/rest": "^22.0.1",
     "@prisma/client": "^5.7.0",
     "@types/dotenv": "^6.1.1",
