@@ -81,3 +81,44 @@ export interface ShortUrlInfo {
   clicks: number;
   createdAt: Date;
 }
+
+// Short URL API Types
+export interface CreateShortUrlResponse {
+  message: string;
+  shortUrl: string;
+  shortCode: string;
+  originalUrl: string;
+  createdAt?: Date;
+}
+
+export interface ShortUrlWithClicks extends CreateShortUrlResponse {
+  clicks: number;
+}
+
+export interface MyShortUrlsResponse {
+  count: number;
+  urls: ShortUrlWithClicks[];
+}
+
+export interface DeleteShortUrlResponse {
+  message: string;
+}
+
+// GitHub API Types
+export interface GitHubUserInfo {
+  username: string;
+  name: string | null;
+  email: string | null;
+  bio: string | null;
+  location: string | null;
+  company: string | null;
+  blog: string | null;
+  twitter: string | null;
+  avatarUrl: string;
+  publicRepos: number;
+  publicGists: number;
+  followers: number;
+  following: number;
+  createdAt: string;
+  updatedAt: string;
+}

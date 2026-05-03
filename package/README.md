@@ -1,6 +1,6 @@
 # @epta/auth-client
 
-A TypeScript client library for interacting with the EPTA Auth API. Provides type-safe methods for authentication, token management, and API key operations.
+A comprehensive TypeScript client library for interacting with the EPTA API. Provides type-safe methods for authentication, token management, API key operations, short URLs, and GitHub integration.
 
 ## Installation
 
@@ -13,9 +13,15 @@ npm install @epta/auth-client axios
 ### Basic Setup
 
 ```typescript
-import { EptaAuthClient } from "@epta/auth-client";
+import { 
+  EptaAuthClient, 
+  EptaShortUrlClient, 
+  EptaGitHubClient 
+} from "@epta/auth-client";
 
-const client = new EptaAuthClient("http://localhost:3000/api");
+const authClient = new EptaAuthClient("http://localhost:3000/api");
+const shortUrlClient = new EptaShortUrlClient("http://localhost:3000/api");
+const githubClient = new EptaGitHubClient("http://localhost:3000/api");
 ```
 
 ### Authentication
@@ -256,6 +262,60 @@ try {
 }
 ```
 
+### Short URL Management
+
+#### Create a short URL
+
+```typescript
+try {
+  const response = await shortUrlClient.shortenUrl("https://github.com/very-long-url");
+  console.log("Short URL created:", response.shortUrl);
+  console.log("Short code:", response.shortCode);
+} catch (error) {
+  console.error("Failed to create short URL:", error.message);
+}
+```
+
+#### Get all your short URLs
+
+```typescript
+try {
+  const response = await shortUrlClient.getMyShortUrls();
+  console.log("Total short URLs:", response.count);
+  response.urls.forEach(url => {
+    console.log(`${url.shortCode}: ${url.originalUrl} (${url.clicks} clicks)`);
+  });
+} catch (error) {
+  console.error("Failed to fetch short URLs:", error.message);
+}
+```
+
+#### Delete a short URL
+
+```typescript
+try {
+  const response = await shortUrlClient.deleteShortUrl("abc123");
+  console.log("Short URL deleted:", response.message);
+} catch (error) {
+  console.error("Failed to delete short URL:", error.message);
+}
+```
+
+### GitHub Integration
+
+#### Get GitHub user information
+
+```typescript
+try {
+  const userInfo = await githubClient.getGitHubUserInfo("your_github_personal_token");
+  console.log("GitHub username:", userInfo.username);
+  console.log("Followers:", userInfo.followers);
+  console.log("Public repos:", userInfo.publicRepos);
+} catch (error) {
+  console.error("Failed to fetch GitHub info:", error.message);
+}
+```
+
 ## Types
 
 The package exports TypeScript types for all API responses:
@@ -271,6 +331,11 @@ import type {
   ApiKeyActionResponse,
   UpdateTokenResponse,
   ErrorResponse,
+  CreateShortUrlResponse,
+  ShortUrlWithClicks,
+  MyShortUrlsResponse,
+  DeleteShortUrlResponse,
+  GitHubUserInfo,
 } from "@epta/auth-client";
 ```
 
@@ -290,6 +355,17 @@ import type {
 - `PATCH /auth/api-keys/:id/toggle` - Enable/disable an API key
 - `PATCH /auth/api-keys/:id/regenerate` - Regenerate an API key
 - `DELETE /auth/api-keys/:id` - Delete an API key
+
+### Short URLs
+
+- `POST /s/shorten` - Create a short URL (requires authentication)
+- `GET /s/my-urls` - Get all user's short URLs (requires authentication)
+- `DELETE /s/:shortCode` - Delete a short URL (requires authentication)
+- `GET /s/:shortCode` - Redirect to original URL (public)
+
+### GitHub
+
+- `POST /github/github-info` - Get GitHub user information from token
 
 ## Requirements
 

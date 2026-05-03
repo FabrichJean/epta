@@ -1,5 +1,7 @@
 export { EptaAuthClient, default } from "./client";
 export { EptaFilesClient } from "./filesClient";
+export { EptaShortUrlClient } from "./shorturlClient";
+export { EptaGitHubClient } from "./githubClient";
 export type {
   User,
   AuthResponse,
@@ -12,4 +14,9 @@ export type {
   ErrorResponse,
   FileMetadata,
   ShortUrlInfo,
+  CreateShortUrlResponse,
+  ShortUrlWithClicks,
+  MyShortUrlsResponse,
+  DeleteShortUrlResponse,
+  GitHubUserInfo,
 } from "./types";
