@@ -17,7 +17,6 @@ const upload = multer({
 // Upload file to seed project
 router.post('/upload', authenticate, upload.single('file'), async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.userId!;
     const file = req.file;
     let { path } = req.body;
 
@@ -61,6 +60,8 @@ router.post('/upload', authenticate, upload.single('file'), async (req: AuthRequ
     if (!project) {
       return res.status(404).json({ error: 'No projects found for user' });
     }
+
+    const userId = project.userId;
 
     // Get user's GitHub token
     const ghp = await getUserGithubToken(userId);
