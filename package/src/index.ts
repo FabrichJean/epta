@@ -5,6 +5,7 @@ export { EptaGitHubClient } from "./githubClient";
 export { EptaProjectsClient } from "./projectsClient";
 export { EptaApp, default as EptaAppDefault } from "./app";
 export type {
+  EptaConfig,
   User,
   AuthResponse,
   ApiKeyInfo,

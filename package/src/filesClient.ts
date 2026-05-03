@@ -7,14 +7,18 @@ import axios, { AxiosInstance, AxiosError } from "axios";
 export class EptaFilesClient {
   private client: AxiosInstance;
 
-  constructor(baseURL: string) {
-    this.client = axios.create({
-      baseURL,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      responseType: "arraybuffer",
-    });
+  constructor(baseURL: string, axiosInstance?: AxiosInstance) {
+    if (axiosInstance) {
+      this.client = axiosInstance;
+    } else {
+      this.client = axios.create({
+        baseURL,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        responseType: "arraybuffer",
+      });
+    }
   }
 
   /**

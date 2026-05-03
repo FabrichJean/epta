@@ -6,6 +6,15 @@ import { EptaProjectsClient } from "./projectsClient";
 import axios from "axios";
 
 /**
+ * Configuration object for EptaApp
+ */
+interface EptaConfig {
+  url: string;
+  token?: string;
+  apiKey?: string;
+}
+
+/**
  * EPTA App Configuration
  * Central configuration and client management for the EPTA API
  * Handles authentication and token injection for all clients
@@ -14,6 +23,8 @@ export class EptaApp {
   private _url: string;
   private _token: string | null = null;
   private _apiKey: string | null = null;
+  private _axiosInstance: any;
+  private _interceptorId: number | null = null;
 
   // Client instances
   public auth: EptaAuthClient;
@@ -22,30 +33,64 @@ export class EptaApp {
   public github: EptaGitHubClient;
   public projects: EptaProjectsClient;
 
-  constructor(url: string, token?: string, apiKey?: string) {
-    this._url = url;
-    this._token = token || null;
-    this._apiKey = apiKey || null;
+  constructor(config: EptaConfig | string, token?: string, apiKey?: string) {
+    // Handle both object config and individual parameters
+    if (typeof config === "string") {
+      // Legacy: new EptaApp(url, token?, apiKey?)
+      this._url = config;
+      this._token = token || null;
+      this._apiKey = apiKey || null;
+    } else {
+      // New: new EptaApp({ url, token?, apiKey? })
+      this._url = config.url;
+      this._token = config.token || null;
+      this._apiKey = config.apiKey || null;
+    }
 
-    // Initialize all clients
-    this.auth = new EptaAuthClient(url, token);
-    this.files = new EptaFilesClient(url);
-    this.shortUrl = new EptaShortUrlClient(url);
-    this.github = new EptaGitHubClient(url);
-    this.projects = new EptaProjectsClient(url);
+    // Create a centralized axios instance for all clients
+    this._axiosInstance = axios.create({
+      baseURL: this._url,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-    // Setup global interceptor for authenticated requests
+    // Setup request interceptor for this instance
     this.setupAxiosInterceptor();
+
+    // Initialize all clients with the centralized axios instance
+    this.auth = new EptaAuthClient(this._url, this._token || undefined);
+    this.files = new EptaFilesClient(this._url, this._axiosInstance);
+    this.shortUrl = new EptaShortUrlClient(this._url, this._axiosInstance);
+    this.github = new EptaGitHubClient(this._url, this._axiosInstance);
+    this.projects = new EptaProjectsClient(this._url, this._axiosInstance);
   }
 
   /**
-   * Setup axios interceptor to inject token into all requests
+   * Setup axios interceptor to inject token and apiKey into all requests
    */
   private setupAxiosInterceptor(): void {
-    axios.interceptors.request.use((config: any) => {
+    // Remove previous interceptor if it exists
+    if (this._interceptorId !== null) {
+      this._axiosInstance.interceptors.request.eject(this._interceptorId);
+    }
+
+    // Add new interceptor
+    this._interceptorId = this._axiosInstance.interceptors.request.use((config: any) => {
+      if (!config.headers) {
+        config.headers = {};
+      }
+
+      // Add token if available
       if (this._token) {
         config.headers.Authorization = `Bearer ${this._token}`;
       }
+
+      // Add API key if available
+      if (this._apiKey) {
+        config.headers["X-API-Key"] = this._apiKey;
+      }
+
       return config;
     });
   }
@@ -62,12 +107,21 @@ export class EptaApp {
    */
   setUrl(url: string): void {
     this._url = url;
-    // Update all clients with new URL
+    // Recreate axios instance with new URL
+    this._axiosInstance = axios.create({
+      baseURL: url,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    this.setupAxiosInterceptor();
+    
+    // Update all clients with new axios instance
     this.auth = new EptaAuthClient(url, this._token || undefined);
-    this.files = new EptaFilesClient(url);
-    this.shortUrl = new EptaShortUrlClient(url);
-    this.github = new EptaGitHubClient(url);
-    this.projects = new EptaProjectsClient(url);
+    this.files = new EptaFilesClient(url, this._axiosInstance);
+    this.shortUrl = new EptaShortUrlClient(url, this._axiosInstance);
+    this.github = new EptaGitHubClient(url, this._axiosInstance);
+    this.projects = new EptaProjectsClient(url, this._axiosInstance);
   }
 
   /**
@@ -83,6 +137,8 @@ export class EptaApp {
   setToken(token: string): void {
     this._token = token;
     this.auth.setToken(token);
+    // Refresh interceptor to apply new token
+    this.setupAxiosInterceptor();
   }
 
   /**
@@ -91,6 +147,8 @@ export class EptaApp {
   clearToken(): void {
     this._token = null;
     this.auth.clearToken();
+    // Refresh interceptor to remove token
+    this.setupAxiosInterceptor();
   }
 
   /**
@@ -105,6 +163,8 @@ export class EptaApp {
    */
   setApiKey(apiKey: string): void {
     this._apiKey = apiKey;
+    // Refresh interceptor to apply new API key
+    this.setupAxiosInterceptor();
   }
 
   /**
@@ -112,6 +172,8 @@ export class EptaApp {
    */
   clearApiKey(): void {
     this._apiKey = null;
+    // Refresh interceptor to remove API key
+    this.setupAxiosInterceptor();
   }
 
   /**

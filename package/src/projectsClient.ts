@@ -23,13 +23,17 @@ import {
 export class EptaProjectsClient {
   private client: AxiosInstance;
 
-  constructor(baseURL: string) {
-    this.client = axios.create({
-      baseURL,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+  constructor(baseURL: string, axiosInstance?: AxiosInstance) {
+    if (axiosInstance) {
+      this.client = axiosInstance;
+    } else {
+      this.client = axios.create({
+        baseURL,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
   }
 
   /**

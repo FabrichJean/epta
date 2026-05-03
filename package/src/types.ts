@@ -3,6 +3,15 @@
  * Provides interfaces and types for auth-related API responses
  */
 
+/**
+ * Configuration object for EptaApp
+ */
+export interface EptaConfig {
+  url: string;
+  token?: string;
+  apiKey?: string;
+}
+
 export interface User {
   id: number;
   name: string;

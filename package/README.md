@@ -32,8 +32,9 @@ const shortUrl = await app.shortUrl.shortenUrl("https://example.com");
 
 ### Alternative: Initialize with Existing Credentials
 
-You can initialize with token, API key, or both:
+You can initialize with token, API key, or both using either individual parameters or a configuration object:
 
+**Using individual parameters:**
 ```typescript
 import { EptaApp } from "@epta/client";
 
@@ -49,8 +50,34 @@ const app3 = new EptaApp(
   "your_jwt_token",
   "your_api_key"
 );
+```
 
-// Ready to use immediately
+**Using a configuration object (Recommended):**
+```typescript
+import { EptaApp } from "@epta/client";
+
+// With JWT token only
+const app = new EptaApp({
+  url: "http://localhost:3000/api",
+  token: "your_jwt_token"
+});
+
+// With API key only
+const app2 = new EptaApp({
+  url: "http://localhost:3000/api",
+  apiKey: "your_api_key"
+});
+
+// With both token and API key
+const app3 = new EptaApp({
+  url: "http://localhost:3000/api",
+  token: "your_jwt_token",
+  apiKey: "your_api_key"
+});
+```
+
+Ready to use immediately:
+```typescript
 const currentUser = await app.auth.getCurrentUser();
 ```
 
