@@ -88,21 +88,27 @@ const restoredApp = EptaApp.fromConfig(savedConfig);
 
 ### Alternative: Individual Clients
 
-If you prefer to use individual clients instead of `EptaApp`:
+Most clients should be used through `EptaApp`. However, you can use individual clients directly:
 
+**Authenticated Clients (require JWT token from EptaApp):**
 ```typescript
-import { 
-  EptaAuthClient, 
-  EptaShortUrlClient, 
-  EptaGitHubClient,
-  EptaProjectsClient 
-} from "@epta/auth-client";
+import { EptaAuthClient } from "@epta/auth-client";
 
 const authClient = new EptaAuthClient("http://localhost:3000/api");
-const shortUrlClient = new EptaShortUrlClient("http://localhost:3000/api");
-const githubClient = new EptaGitHubClient("http://localhost:3000/api");
-const projectsClient = new EptaProjectsClient("http://localhost:3000/api");
+await authClient.register("ghp_token");
+await authClient.login("ghp_token");
 ```
+
+**Public Client (GitHub operations without JWT authentication):**
+```typescript
+import { EptaGitHubClient } from "@epta/auth-client";
+
+const githubClient = new EptaGitHubClient("http://localhost:3000/api");
+// Get GitHub info before registering/logging in
+const userInfo = await githubClient.getGitHubUserInfo("ghp_token");
+```
+
+Note: `EptaShortUrlClient` and `EptaProjectsClient` are designed to be used through `EptaApp` since they require authentication.
 
 ### Authentication
 

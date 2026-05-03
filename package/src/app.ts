@@ -3,10 +3,12 @@ import { EptaFilesClient } from "./filesClient";
 import { EptaShortUrlClient } from "./shorturlClient";
 import { EptaGitHubClient } from "./githubClient";
 import { EptaProjectsClient } from "./projectsClient";
+import axios from "axios";
 
 /**
  * EPTA App Configuration
  * Central configuration and client management for the EPTA API
+ * Handles authentication and token injection for all clients
  */
 export class EptaApp {
   private _url: string;
@@ -28,9 +30,24 @@ export class EptaApp {
     // Initialize all clients
     this.auth = new EptaAuthClient(url, token);
     this.files = new EptaFilesClient(url);
-    this.shortUrl = new EptaShortUrlClient(url, token);
+    this.shortUrl = new EptaShortUrlClient(url);
     this.github = new EptaGitHubClient(url);
-    this.projects = new EptaProjectsClient(url, token);
+    this.projects = new EptaProjectsClient(url);
+
+    // Setup global interceptor for authenticated requests
+    this.setupAxiosInterceptor();
+  }
+
+  /**
+   * Setup axios interceptor to inject token into all requests
+   */
+  private setupAxiosInterceptor(): void {
+    axios.interceptors.request.use((config: any) => {
+      if (this._token) {
+        config.headers.Authorization = `Bearer ${this._token}`;
+      }
+      return config;
+    });
   }
 
   /**
@@ -48,9 +65,9 @@ export class EptaApp {
     // Update all clients with new URL
     this.auth = new EptaAuthClient(url, this._token || undefined);
     this.files = new EptaFilesClient(url);
-    this.shortUrl = new EptaShortUrlClient(url, this._token || undefined);
+    this.shortUrl = new EptaShortUrlClient(url);
     this.github = new EptaGitHubClient(url);
-    this.projects = new EptaProjectsClient(url, this._token || undefined);
+    this.projects = new EptaProjectsClient(url);
   }
 
   /**
@@ -66,8 +83,6 @@ export class EptaApp {
   setToken(token: string): void {
     this._token = token;
     this.auth.setToken(token);
-    this.shortUrl.setToken(token);
-    this.projects.setToken(token);
   }
 
   /**
@@ -76,8 +91,6 @@ export class EptaApp {
   clearToken(): void {
     this._token = null;
     this.auth.clearToken();
-    this.shortUrl.clearToken();
-    this.projects.clearToken();
   }
 
   /**
@@ -137,8 +150,6 @@ export class EptaApp {
     this._token = null;
     this._apiKey = null;
     this.auth.clearToken();
-    this.shortUrl.clearToken();
-    this.projects.clearToken();
   }
 
   /**

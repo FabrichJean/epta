@@ -18,51 +18,18 @@ import {
 /**
  * EPTA Projects Client
  * A TypeScript client for managing projects and project files
+ * Note: Authentication is handled by EptaApp
  */
 export class EptaProjectsClient {
   private client: AxiosInstance;
-  private token: string | null = null;
 
-  constructor(baseURL: string, token?: string) {
+  constructor(baseURL: string) {
     this.client = axios.create({
       baseURL,
       headers: {
         "Content-Type": "application/json",
       },
     });
-
-    if (token) {
-      this.setToken(token);
-    }
-
-    // Add interceptor to include token in all requests
-    this.client.interceptors.request.use((config: any) => {
-      if (this.token) {
-        config.headers.Authorization = `Bearer ${this.token}`;
-      }
-      return config;
-    });
-  }
-
-  /**
-   * Set or update the JWT token
-   */
-  setToken(token: string): void {
-    this.token = token;
-  }
-
-  /**
-   * Get the current token
-   */
-  getToken(): string | null {
-    return this.token;
-  }
-
-  /**
-   * Clear the stored token
-   */
-  clearToken(): void {
-    this.token = null;
   }
 
   /**
