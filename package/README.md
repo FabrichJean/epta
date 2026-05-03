@@ -16,12 +16,14 @@ npm install @epta/auth-client axios
 import { 
   EptaAuthClient, 
   EptaShortUrlClient, 
-  EptaGitHubClient 
+  EptaGitHubClient,
+  EptaProjectsClient 
 } from "@epta/auth-client";
 
 const authClient = new EptaAuthClient("http://localhost:3000/api");
 const shortUrlClient = new EptaShortUrlClient("http://localhost:3000/api");
 const githubClient = new EptaGitHubClient("http://localhost:3000/api");
+const projectsClient = new EptaProjectsClient("http://localhost:3000/api");
 ```
 
 ### Authentication
@@ -316,6 +318,199 @@ try {
 }
 ```
 
+### Projects Management
+
+#### Create a new project
+
+```typescript
+try {
+  const response = await projectsClient.createProject(
+    "My Project",
+    "A sample project description"
+  );
+  console.log("Project created:", response.project.name);
+  console.log("GitHub repository:", response.project.link);
+} catch (error) {
+  console.error("Failed to create project:", error.message);
+}
+```
+
+#### Get all projects
+
+```typescript
+try {
+  const response = await projectsClient.getProjects();
+  response.projects.forEach(project => {
+    console.log(`${project.name} - ${project.link}`);
+  });
+} catch (error) {
+  console.error("Failed to fetch projects:", error.message);
+}
+```
+
+#### Get project contents
+
+```typescript
+try {
+  // Get root directory
+  const root = await projectsClient.getContents(projectId);
+  console.log("Files in root:", root.contents);
+
+  // Get specific directory
+  const src = await projectsClient.getContents(projectId, "src");
+  console.log("Files in src:", src.contents);
+} catch (error) {
+  console.error("Failed to fetch contents:", error.message);
+}
+```
+
+#### Create or update a file
+
+```typescript
+try {
+  const response = await projectsClient.createFile(
+    projectId,
+    "src/index.ts",
+    "export const hello = 'world';",
+    "Initial commit"
+  );
+  console.log("File created:", response.file.path);
+  console.log("Public URL:", response.file.publicUrl);
+} catch (error) {
+  console.error("Failed to create file:", error.message);
+}
+```
+
+#### Update file content
+
+```typescript
+try {
+  const response = await projectsClient.updateFile(
+    projectId,
+    "src/index.ts",
+    "export const hello = 'updated';",
+    "Update index"
+  );
+  console.log("File updated:", response.file.path);
+} catch (error) {
+  console.error("Failed to update file:", error.message);
+}
+```
+
+#### Create a folder
+
+```typescript
+try {
+  const response = await projectsClient.createFolder(
+    projectId,
+    "src/components",
+    "Create components folder"
+  );
+  console.log("Folder created:", response.folder.path);
+} catch (error) {
+  console.error("Failed to create folder:", error.message);
+}
+```
+
+#### Upload a file
+
+```typescript
+try {
+  // In browser context
+  const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+  const file = fileInput.files?.[0];
+
+  if (file) {
+    const response = await projectsClient.uploadFile(
+      projectId,
+      file,
+      `images/${file.name}`
+    );
+    console.log("File uploaded:", response.file.path);
+    console.log("Public URL:", response.file.publicUrl);
+  }
+} catch (error) {
+  console.error("Failed to upload file:", error.message);
+}
+```
+
+#### Star a file
+
+```typescript
+try {
+  const response = await projectsClient.starFile(projectId, "src/index.ts");
+  console.log("File starred successfully");
+} catch (error) {
+  console.error("Failed to star file:", error.message);
+}
+```
+
+#### Check if file is starred
+
+```typescript
+try {
+  const { isStarred } = await projectsClient.checkIsStarred(projectId, "src/index.ts");
+  console.log("File is starred:", isStarred);
+} catch (error) {
+  console.error("Failed to check starred status:", error.message);
+}
+```
+
+#### Get all starred files
+
+```typescript
+try {
+  const response = await projectsClient.getStarredFiles();
+  console.log("Total starred files:", response.count);
+  response.stareds.forEach(starred => {
+    console.log(`${starred.path} in ${starred.project.name}`);
+  });
+} catch (error) {
+  console.error("Failed to fetch starred files:", error.message);
+}
+```
+
+#### Unstar a file
+
+```typescript
+try {
+  const response = await projectsClient.unstarFile(projectId, "src/index.ts");
+  console.log("File unstarred successfully");
+} catch (error) {
+  console.error("Failed to unstar file:", error.message);
+}
+```
+
+#### Update a project
+
+```typescript
+try {
+  const response = await projectsClient.updateProject(
+    projectId,
+    "Updated Project Name",
+    "Updated description"
+  );
+  console.log("Project updated:", response.project.name);
+} catch (error) {
+  console.error("Failed to update project:", error.message);
+}
+```
+
+#### Delete a project
+
+```typescript
+try {
+  // Delete only from database
+  await projectsClient.deleteProject(projectId);
+
+  // Or delete from both database and GitHub
+  await projectsClient.deleteProject(projectId, true);
+  console.log("Project deleted successfully");
+} catch (error) {
+  console.error("Failed to delete project:", error.message);
+}
+```
+
 ## Types
 
 The package exports TypeScript types for all API responses:
@@ -336,6 +531,18 @@ import type {
   MyShortUrlsResponse,
   DeleteShortUrlResponse,
   GitHubUserInfo,
+  Project,
+  CreateProjectResponse,
+  GetProjectsResponse,
+  GetContentsResponse,
+  CreateFileResponse,
+  CreateFolderResponse,
+  UploadFileResponse,
+  GetStarredFilesResponse,
+  StarFileResponse,
+  UnstarFileResponse,
+  UpdateProjectResponse,
+  DeleteProjectResponse,
 } from "@epta/auth-client";
 ```
 
@@ -366,6 +573,23 @@ import type {
 ### GitHub
 
 - `POST /github/github-info` - Get GitHub user information from token
+
+### Projects
+
+- `POST /projects` - Create a new project (requires authentication)
+- `GET /projects` - Get all projects (requires authentication)
+- `GET /projects/:id` - Get a single project (requires authentication)
+- `GET /projects/:id/contents/*` - Get contents of a path (requires authentication)
+- `POST /projects/:id/contents/*` - Create/update a file (requires authentication)
+- `PUT /projects/:id/contents/*` - Update a file (requires authentication)
+- `POST /projects/:id/folders/*` - Create a folder (requires authentication)
+- `POST /projects/:projectId/upload` - Upload a file (requires authentication)
+- `GET /projects/starred/list` - Get all starred files (requires authentication)
+- `GET /projects/starred/check/:projectId/:path` - Check if file is starred (requires authentication)
+- `POST /projects/starred/:projectId` - Star a file (requires authentication)
+- `DELETE /projects/starred/:projectId` - Unstar a file (requires authentication)
+- `PUT /projects/:id` - Update a project (requires authentication)
+- `DELETE /projects/:id` - Delete a project (requires authentication)
 
 ## Requirements
 

@@ -122,3 +122,172 @@ export interface GitHubUserInfo {
   createdAt: string;
   updatedAt: string;
 }
+
+// Projects API Types
+export interface ProjectMetadata {
+  fullName?: string;
+  defaultBranch?: string;
+  language?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Project {
+  id: number;
+  name: string;
+  link: string;
+  description: string | null;
+  isPrivate: boolean;
+  metadata: ProjectMetadata;
+  userId: number;
+  createdAt: Date;
+  updatedAt: Date;
+  user?: {
+    id: number;
+    name: string;
+    username: string;
+  };
+}
+
+export interface CreateProjectResponse {
+  message: string;
+  project: Project;
+}
+
+export interface GetProjectsResponse {
+  projects: Project[];
+}
+
+export interface FileContent {
+  type: "file" | "dir";
+  name: string;
+  path: string;
+  size?: number;
+  sha?: string;
+  url?: string;
+  downloadUrl?: string;
+  publicUrl?: string | null;
+  shortCode?: string;
+  encoding?: string;
+  isStarred?: boolean;
+  contents?: FileContent[];
+}
+
+export interface GetContentsResponse {
+  type: "file" | "dir";
+  name?: string;
+  path: string;
+  size?: number;
+  sha?: string;
+  url?: string;
+  downloadUrl?: string;
+  publicUrl?: string | null;
+  shortCode?: string;
+  encoding?: string;
+  isStarred?: boolean;
+  contents?: FileContent[];
+}
+
+export interface CreateFileResponse {
+  message: string;
+  file: {
+    path: string;
+    size: number;
+    sha?: string;
+    url?: string;
+    publicUrl: string;
+    downloadUrl: string;
+    originalDownloadUrl?: string;
+    commit?: {
+      sha?: string;
+      message?: string;
+      url?: string;
+    };
+  };
+}
+
+export interface CreateFolderResponse {
+  message: string;
+  folder: {
+    path: string;
+    file: {
+      path?: string;
+      sha?: string;
+      url?: string;
+    };
+    commit?: {
+      sha?: string;
+      message?: string;
+      url?: string;
+    };
+  };
+}
+
+export interface UploadFileResponse {
+  message: string;
+  file: {
+    name: string;
+    path: string;
+    size: number;
+    sha?: string;
+    url?: string;
+    publicUrl: string;
+    downloadUrl: string;
+    originalDownloadUrl?: string;
+  };
+}
+
+export interface StarredFile {
+  id: number;
+  path: string;
+  userId: number;
+  projectId: number;
+  createdAt: Date;
+  project: {
+    id: number;
+    name: string;
+    metadata: ProjectMetadata;
+    user: {
+      username: string;
+    };
+  };
+  fileDetails?: {
+    name: string;
+    size: number;
+    sha: string;
+    url: string;
+    downloadUrl: string;
+    publicUrl: string;
+    shortCode: string;
+  };
+}
+
+export interface GetStarredFilesResponse {
+  count: number;
+  stareds: StarredFile[];
+}
+
+export interface StarFileResponse {
+  message: string;
+  stared: {
+    id: number;
+    path: string;
+    userId: number;
+    projectId: number;
+    createdAt: Date;
+  };
+}
+
+export interface UnstarFileResponse {
+  message: string;
+}
+
+export interface UpdateProjectResponse {
+  message: string;
+  project: Project;
+}
+
+export interface DeleteProjectResponse {
+  message: string;
+}
+
