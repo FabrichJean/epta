@@ -505,12 +505,16 @@ try {
   const file = fileInput.files?.[0];
 
   if (file) {
-    const response = await app.files.uploadFile(file, "path/to/file.txt");
+    // With default filename from file object
+    const response = await app.files.uploadFile(file);
     console.log("File uploaded successfully");
     console.log("Short URL:", response.file.shortUrl);
     console.log("GitHub URL:", response.file.url);
     console.log("Download URL:", response.file.downloadUrl);
     console.log("Project:", response.project.name);
+    
+    // Or with custom path
+    const response2 = await app.files.uploadFile(file, "path/to/file.txt");
   }
 } catch (error) {
   console.error("Failed to upload file:", error.message);
@@ -523,10 +527,15 @@ import fs from "fs";
 
 try {
   const fileBuffer = await fs.promises.readFile("./local-file.pdf");
-  const response = await app.files.uploadFile(fileBuffer, "documents/file.pdf");
+  
+  // With default filename
+  const response = await app.files.uploadFile(fileBuffer);
   console.log("File uploaded successfully");
   console.log("Short URL:", response.file.shortUrl);
   console.log("GitHub URL:", response.file.url);
+  
+  // Or with custom path
+  const response2 = await app.files.uploadFile(fileBuffer, "documents/file.pdf");
 } catch (error) {
   console.error("Failed to upload file:", error.message);
 }
