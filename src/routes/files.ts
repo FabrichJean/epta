@@ -17,7 +17,7 @@ const upload = multer({
 // Upload file to seed project
 router.post('/upload', authenticate, upload.single('file'), async (req: AuthRequest, res: Response) => {
   try {
-    // const userId = req.userId!;
+    const userId = req.userId!;
     const file = req.file;
     let { path } = req.body;
 
@@ -25,8 +25,25 @@ router.post('/upload', authenticate, upload.single('file'), async (req: AuthRequ
       return res.status(400).json({ error: 'File is required' });
     }
 
+    // Generate appropriate path if not provided
     if (!path) {
-      path = file.originalname; // Use original filename as default path
+      const extension = file.originalname.split('.').pop()?.toLowerCase() || '';
+      let folder = 'files'; // default folder
+      
+      // Categorize file by extension
+      if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(extension)) {
+        folder = 'images';
+      } else if (['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(extension)) {
+        folder = 'documents';
+      } else if (['mp4', 'avi', 'mov', 'mkv', 'webm'].includes(extension)) {
+        folder = 'videos';
+      } else if (['mp3', 'wav', 'flac', 'aac', 'ogg'].includes(extension)) {
+        folder = 'audio';
+      } else if (['js', 'ts', 'jsx', 'tsx', 'py', 'java', 'cpp', 'c', 'go', 'rs'].includes(extension)) {
+        folder = 'code';
+      }
+      
+      path = `${folder}/${file.originalname}`;
     }
 
     const projectName = process.env.SEED_PROJECT_NAME
