@@ -17,6 +17,7 @@ export type {
   UpdateTokenResponse,
   ErrorResponse,
   FileMetadata,
+  FileUploadResponse,
   ShortUrlInfo,
   CreateShortUrlResponse,
   ShortUrlWithClicks,

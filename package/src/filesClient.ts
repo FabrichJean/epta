@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
+import { FileUploadResponse } from "./types";
 
 /**
  * EPTA Files Client
@@ -29,7 +30,7 @@ export class EptaFilesClient {
   async getFile(shortCode: string): Promise<Buffer> {
     try {
       const response = await this.client.get<ArrayBuffer>(
-        `/files/${shortCode}`
+        `/f/${shortCode}`
       );
       return Buffer.from(response.data);
     } catch (error) {
@@ -51,7 +52,7 @@ export class EptaFilesClient {
   }> {
     try {
       const response = await this.client.get<ArrayBuffer>(
-        `/files/${shortCode}`
+        `/f/${shortCode}`
       );
 
       const contentType = String(
@@ -118,6 +119,63 @@ export class EptaFilesClient {
       const fs = await import("fs").then((m) => m.promises);
       const { buffer } = await this.getFileWithMetadata(shortCode);
       await fs.writeFile(outputPath, buffer);
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Upload a file to the seed project
+   * @param file - The file to upload (File object from browser or Buffer from Node.js)
+   * @param filePath - Optional custom path for the file in the repository (default: original filename)
+   * @returns Upload response with file details, download URL, and short code
+   */
+  async uploadFile(
+    file: File | Buffer,
+    filePath?: string
+  ): Promise<FileUploadResponse> {
+    try {
+      const formData = new FormData();
+
+      // Handle both File (browser) and Buffer (Node.js)
+      if (file instanceof File) {
+        formData.append("file", file);
+      } else if (Buffer.isBuffer(file)) {
+        // Convert Buffer to Blob for FormData
+        const blob = new Blob([file]);
+        formData.append("file", blob, "file");
+      } else {
+        throw new Error("File must be a File object or Buffer");
+      }
+
+      // Add optional path parameter
+      if (filePath) {
+        formData.append("path", filePath);
+      }
+
+      // Create a new instance for file upload without arraybuffer responseType
+      const uploadClient = axios.create({
+        baseURL: this.client.defaults.baseURL,
+        headers: this.client.defaults.headers,
+      });
+
+      // Copy interceptors if this.client has them
+      if ((this.client as any).interceptors?.request) {
+        uploadClient.interceptors.request.handlers =
+          (this.client as any).interceptors.request.handlers;
+      }
+
+      const response = await uploadClient.post<FileUploadResponse>(
+        "/f/upload",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      return response.data;
     } catch (error) {
       throw this.handleError(error);
     }

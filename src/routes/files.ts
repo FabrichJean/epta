@@ -46,7 +46,7 @@ router.post('/upload', authenticate, upload.single('file'), async (req: AuthRequ
     }
 
     // Get user's GitHub token
-    const ghp = await getUserGithubToken(project.userId);
+    const ghp = await getUserGithubToken(userId);
     if (!ghp) {
       return res.status(401).json({ error: 'GitHub token not found. Please re-authenticate.' });
     }
@@ -83,7 +83,7 @@ router.post('/upload', authenticate, upload.single('file'), async (req: AuthRequ
         data: {
           shortCode,
           originalUrl: data.content?.download_url || '',
-          userId: project.userId,
+          userId,
         },
       });
 

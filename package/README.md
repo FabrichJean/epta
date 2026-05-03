@@ -496,6 +496,42 @@ try {
 }
 ```
 
+#### Upload file to seed project
+
+```typescript
+// Browser - using File from input element
+try {
+  const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+  const file = fileInput.files?.[0];
+
+  if (file) {
+    const response = await app.files.uploadFile(file, "path/to/file.txt");
+    console.log("File uploaded successfully");
+    console.log("Short URL:", response.file.shortUrl);
+    console.log("GitHub URL:", response.file.url);
+    console.log("Download URL:", response.file.downloadUrl);
+    console.log("Project:", response.project.name);
+  }
+} catch (error) {
+  console.error("Failed to upload file:", error.message);
+}
+```
+
+```typescript
+// Node.js - using Buffer
+import fs from "fs";
+
+try {
+  const fileBuffer = await fs.promises.readFile("./local-file.pdf");
+  const response = await app.files.uploadFile(fileBuffer, "documents/file.pdf");
+  console.log("File uploaded successfully");
+  console.log("Short URL:", response.file.shortUrl);
+  console.log("GitHub URL:", response.file.url);
+} catch (error) {
+  console.error("Failed to upload file:", error.message);
+}
+```
+
 ## Error Handling
 
 All methods return promises and throw errors with descriptive messages:

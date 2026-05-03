@@ -29,7 +29,7 @@ export class EptaGitHubClient {
   async getGitHubUserInfo(ghp: string): Promise<GitHubUserInfo> {
     try {
       const response = await this.client.post<GitHubUserInfo>(
-        "/github/github-info",
+        "/api/github-info",
         { ghp }
       );
       return response.data;

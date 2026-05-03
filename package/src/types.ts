@@ -85,6 +85,24 @@ export interface FileMetadata {
   filename?: string;
 }
 
+export interface FileUploadResponse {
+  message: string;
+  file: {
+    name: string;
+    path: string;
+    size: number;
+    url: string;
+    downloadUrl: string;
+    shortCode: string;
+    shortUrl: string;
+  };
+  project: {
+    id: number;
+    name: string;
+    link: string;
+  };
+}
+
 export interface ShortUrlInfo {
   shortCode: string;
   originalUrl: string;
