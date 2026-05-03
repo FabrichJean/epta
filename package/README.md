@@ -1,11 +1,11 @@
-# @epta/auth-client
+# @epta/client
 
 A comprehensive TypeScript client library for interacting with the EPTA API. Provides type-safe methods for authentication, token management, API key operations, short URLs, and GitHub integration.
 
 ## Installation
 
 ```bash
-npm install @epta/auth-client axios
+npm install @epta/client axios
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ npm install @epta/auth-client axios
 ### Basic Setup - Using EptaApp (Recommended)
 
 ```typescript
-import { EptaApp } from "@epta/auth-client";
+import { EptaApp } from "@epta/client";
 
 // Initialize the app with configuration
 const app = new EptaApp("http://localhost:3000/api");
@@ -33,7 +33,7 @@ const shortUrl = await app.shortUrl.shortenUrl("https://example.com");
 ### Alternative: Initialize with Existing Token
 
 ```typescript
-import { EptaApp } from "@epta/auth-client";
+import { EptaApp } from "@epta/client";
 
 const app = new EptaApp(
   "http://localhost:3000/api",
@@ -92,7 +92,7 @@ Most clients should be used through `EptaApp`. However, you can use individual c
 
 **Authenticated Clients (require JWT token from EptaApp):**
 ```typescript
-import { EptaAuthClient } from "@epta/auth-client";
+import { EptaAuthClient } from "@epta/client";
 
 const authClient = new EptaAuthClient("http://localhost:3000/api");
 await authClient.register("ghp_token");
@@ -101,7 +101,7 @@ await authClient.login("ghp_token");
 
 **Public Client (GitHub operations without JWT authentication):**
 ```typescript
-import { EptaGitHubClient } from "@epta/auth-client";
+import { EptaGitHubClient } from "@epta/client";
 
 const githubClient = new EptaGitHubClient("http://localhost:3000/api");
 // Get GitHub info before registering/logging in
@@ -263,7 +263,7 @@ try {
 ### Basic Setup
 
 ```typescript
-import { EptaApp } from "@epta/auth-client";
+import { EptaApp } from "@epta/client";
 
 const app = new EptaApp("http://localhost:3000/api");
 ```
@@ -388,7 +388,33 @@ try {
 
 ### GitHub Integration
 
-#### Get GitHub user information
+#### Verify GitHub account before registration
+
+You can verify a GitHub account before registering to EPTA:
+
+```typescript
+import { EptaGitHubClient } from "@epta/client";
+
+// Create a standalone GitHub client (no authentication needed)
+const githubClient = new EptaGitHubClient("http://localhost:3000/api");
+
+try {
+  // Verify the GitHub token is valid
+  const userInfo = await githubClient.getGitHubUserInfo("your_github_personal_token");
+  console.log("GitHub username:", userInfo.username);
+  console.log("Followers:", userInfo.followers);
+  console.log("Public repos:", userInfo.publicRepos);
+  
+  // Then register with the same token
+  const app = new EptaApp("http://localhost:3000/api");
+  const registerResult = await app.auth.register("your_github_personal_token");
+  app.setToken(registerResult.token);
+} catch (error) {
+  console.error("GitHub verification failed:", error.message);
+}
+```
+
+#### Get GitHub user information via EptaApp
 
 ```typescript
 try {
@@ -626,7 +652,7 @@ import type {
   UnstarFileResponse,
   UpdateProjectResponse,
   DeleteProjectResponse,
-} from "@epta/auth-client";
+} from "@epta/client";
 ```
 
 ## API Endpoints
