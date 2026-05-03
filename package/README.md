@@ -10,7 +10,85 @@ npm install @epta/auth-client axios
 
 ## Usage
 
-### Basic Setup
+### Basic Setup - Using EptaApp (Recommended)
+
+```typescript
+import { EptaApp } from "@epta/auth-client";
+
+// Initialize the app with configuration
+const app = new EptaApp("http://localhost:3000/api");
+
+// Set token after authentication
+app.setToken("your_jwt_token");
+
+// Optional: Set API key
+app.setApiKey("your_api_key");
+
+// Access all clients through the app
+const user = await app.auth.getCurrentUser();
+const projects = await app.projects.getProjects();
+const shortUrl = await app.shortUrl.shortenUrl("https://example.com");
+```
+
+### Alternative: Initialize with Existing Token
+
+```typescript
+import { EptaApp } from "@epta/auth-client";
+
+const app = new EptaApp(
+  "http://localhost:3000/api",
+  "your_existing_jwt_token",
+  "your_optional_api_key"
+);
+
+// Ready to use immediately
+const currentUser = await app.auth.getCurrentUser();
+```
+
+### Managing Configuration
+
+```typescript
+// Get current configuration
+const config = app.getConfig();
+console.log(config); // { url, token, apiKey }
+
+// Check authentication status
+if (app.isAuthenticated()) {
+  console.log("User is authenticated");
+}
+
+// Check if API key is set
+if (app.hasApiKey()) {
+  console.log("API key is available");
+}
+
+// Update URL
+app.setUrl("http://new-api-url.com");
+
+// Update token
+app.setToken("new_token");
+
+// Update API key
+app.setApiKey("new_api_key");
+
+// Reset everything
+app.reset();
+```
+
+### Persist Configuration (localStorage example)
+
+```typescript
+// Save configuration
+localStorage.setItem("epta-config", JSON.stringify(app.toJSON()));
+
+// Restore from saved configuration
+const savedConfig = JSON.parse(localStorage.getItem("epta-config") || "{}");
+const restoredApp = EptaApp.fromConfig(savedConfig);
+```
+
+### Alternative: Individual Clients
+
+If you prefer to use individual clients instead of `EptaApp`:
 
 ```typescript
 import { 
@@ -32,7 +110,7 @@ const projectsClient = new EptaProjectsClient("http://localhost:3000/api");
 
 ```typescript
 try {
-  const response = await client.register("your_github_personal_token");
+  const response = await app.auth.register("your_github_personal_token");
   console.log("User registered:", response.user);
   // Token is automatically stored
 } catch (error) {
@@ -44,9 +122,9 @@ try {
 
 ```typescript
 try {
-  const response = await client.login("your_github_personal_token");
+  const response = await app.auth.login("your_github_personal_token");
   console.log("Login successful:", response.user);
-  // Token is automatically stored
+  // Token is automatically stored in app
 } catch (error) {
   console.error("Login failed:", error.message);
 }
@@ -56,7 +134,7 @@ try {
 
 ```typescript
 try {
-  const user = await client.getCurrentUser();
+  const user = await app.auth.getCurrentUser();
   console.log("Current user:", user);
 } catch (error) {
   console.error("Failed to fetch user:", error.message);
@@ -67,20 +145,20 @@ try {
 
 ```typescript
 // Set a token from local storage or previous session
-client.setToken("your_jwt_token");
+app.setToken("your_jwt_token");
 
 // Get the current token
-const token = client.getToken();
+const token = app.getToken();
 
 // Clear the token
-client.clearToken();
+app.clearToken();
 ```
 
 ### Update GitHub Token
 
 ```typescript
 try {
-  const response = await client.updateGitHubToken("new_github_personal_token");
+  const response = await app.auth.updateGitHubToken("new_github_personal_token");
   console.log("GitHub token updated for:", response.user.username);
 } catch (error) {
   console.error("Failed to update GitHub token:", error.message);
@@ -89,23 +167,22 @@ try {
 
 ### API Key Management
 
-
 ```typescript
-// Set a apikey from local storage or previous session
-client.setApiKey("your_api_key");
+// Set an API key
+app.setApiKey("your_api_key");
 
-// Get the current apikey
-const apiKey = client.getApiKey();
+// Get the current API key
+const apiKey = app.getApiKey();
 
-// Clear the token
-client.clearApiKey();
+// Clear the API key
+app.clearApiKey();
 ```
 
 #### Create an API key
 
 ```typescript
 try {
-  const response = await client.createApiKey("My API Key", 30);
+  const response = await app.auth.createApiKey("My API Key", 30);
   console.log("API Key created:", response.apiKey);
   console.log("Key preview:", response.keyInfo.keyPreview);
   console.log("Save this key now:", response.warning);
@@ -118,7 +195,7 @@ try {
 
 ```typescript
 try {
-  const response = await client.getApiKeys();
+  const response = await app.auth.getApiKeys();
   console.log("Total API keys:", response.total);
   console.log("Active keys:", response.active);
   console.log("All keys:", response.apiKeys);
@@ -136,7 +213,7 @@ try {
 
 ```typescript
 try {
-  const response = await client.toggleApiKey(1);
+  const response = await app.auth.toggleApiKey(1);
   console.log(
     "API key is now:",
     response.apiKey?.status === "active" ? "enabled" : "disabled"
@@ -151,11 +228,11 @@ try {
 ```typescript
 try {
   // Regenerate with same expiration
-  const response = await client.regenerateApiKey(1);
+  const response = await app.auth.regenerateApiKey(1);
   console.log("New API key:", response.key);
 
   // Or regenerate with new expiration
-  const response2 = await client.regenerateApiKey(1, 60);
+  const response2 = await app.auth.regenerateApiKey(1, 60);
   console.log("API key regenerated for 60 more days");
 } catch (error) {
   console.error("Failed to regenerate API key:", error.message);
@@ -166,7 +243,7 @@ try {
 
 ```typescript
 try {
-  const response = await client.deleteApiKey(1);
+  const response = await app.auth.deleteApiKey(1);
   console.log(
     `API key "${response.deletedKey?.name}" has been deleted`
   );
@@ -180,9 +257,9 @@ try {
 ### Basic Setup
 
 ```typescript
-import { EptaFilesClient } from "@epta/auth-client";
+import { EptaApp } from "@epta/auth-client";
 
-const filesClient = new EptaFilesClient("http://localhost:3000/api");
+const app = new EptaApp("http://localhost:3000/api");
 ```
 
 ### Get File
@@ -191,7 +268,7 @@ const filesClient = new EptaFilesClient("http://localhost:3000/api");
 
 ```typescript
 try {
-  const buffer = await filesClient.getFile("short-code-123");
+  const buffer = await app.files.getFile("short-code-123");
   console.log("File size:", buffer.length, "bytes");
 } catch (error) {
   console.error("Failed to get file:", error.message);
@@ -203,7 +280,7 @@ try {
 ```typescript
 try {
   const { buffer, contentType, filename } = 
-    await filesClient.getFileWithMetadata("short-code-123");
+    await app.files.getFileWithMetadata("short-code-123");
   console.log("Content Type:", contentType);
   console.log("Filename:", filename);
 } catch (error) {
@@ -215,7 +292,7 @@ try {
 
 ```typescript
 try {
-  const blob = await filesClient.getFileAsBlob("short-code-123");
+  const blob = await app.files.getFileAsBlob("short-code-123");
   console.log("Blob size:", blob.size);
   console.log("Blob type:", blob.type);
 } catch (error) {
@@ -227,7 +304,7 @@ try {
 
 ```typescript
 try {
-  const dataUrl = await filesClient.getFileAsDataUrl("short-code-123");
+  const dataUrl = await app.files.getFileAsDataUrl("short-code-123");
   // Use in <img> tag
   const img = document.createElement("img");
   img.src = dataUrl;
@@ -241,7 +318,7 @@ try {
 
 ```typescript
 try {
-  await filesClient.downloadFile("short-code-123", "./downloaded-file.pdf");
+  await app.files.downloadFile("short-code-123", "./downloaded-file.pdf");
   console.log("File downloaded successfully");
 } catch (error) {
   console.error("Failed to download file:", error.message);
@@ -270,7 +347,7 @@ try {
 
 ```typescript
 try {
-  const response = await shortUrlClient.shortenUrl("https://github.com/very-long-url");
+  const response = await app.shortUrl.shortenUrl("https://github.com/very-long-url");
   console.log("Short URL created:", response.shortUrl);
   console.log("Short code:", response.shortCode);
 } catch (error) {
@@ -282,7 +359,7 @@ try {
 
 ```typescript
 try {
-  const response = await shortUrlClient.getMyShortUrls();
+  const response = await app.shortUrl.getMyShortUrls();
   console.log("Total short URLs:", response.count);
   response.urls.forEach(url => {
     console.log(`${url.shortCode}: ${url.originalUrl} (${url.clicks} clicks)`);
@@ -296,7 +373,7 @@ try {
 
 ```typescript
 try {
-  const response = await shortUrlClient.deleteShortUrl("abc123");
+  const response = await app.shortUrl.deleteShortUrl("abc123");
   console.log("Short URL deleted:", response.message);
 } catch (error) {
   console.error("Failed to delete short URL:", error.message);
@@ -309,7 +386,7 @@ try {
 
 ```typescript
 try {
-  const userInfo = await githubClient.getGitHubUserInfo("your_github_personal_token");
+  const userInfo = await app.github.getGitHubUserInfo("your_github_personal_token");
   console.log("GitHub username:", userInfo.username);
   console.log("Followers:", userInfo.followers);
   console.log("Public repos:", userInfo.publicRepos);
@@ -324,7 +401,7 @@ try {
 
 ```typescript
 try {
-  const response = await projectsClient.createProject(
+  const response = await app.projects.createProject(
     "My Project",
     "A sample project description"
   );
@@ -339,7 +416,7 @@ try {
 
 ```typescript
 try {
-  const response = await projectsClient.getProjects();
+  const response = await app.projects.getProjects();
   response.projects.forEach(project => {
     console.log(`${project.name} - ${project.link}`);
   });
@@ -353,11 +430,11 @@ try {
 ```typescript
 try {
   // Get root directory
-  const root = await projectsClient.getContents(projectId);
+  const root = await app.projects.getContents(projectId);
   console.log("Files in root:", root.contents);
 
   // Get specific directory
-  const src = await projectsClient.getContents(projectId, "src");
+  const src = await app.projects.getContents(projectId, "src");
   console.log("Files in src:", src.contents);
 } catch (error) {
   console.error("Failed to fetch contents:", error.message);
@@ -368,7 +445,7 @@ try {
 
 ```typescript
 try {
-  const response = await projectsClient.createFile(
+  const response = await app.projects.createFile(
     projectId,
     "src/index.ts",
     "export const hello = 'world';",
@@ -385,7 +462,7 @@ try {
 
 ```typescript
 try {
-  const response = await projectsClient.updateFile(
+  const response = await app.projects.updateFile(
     projectId,
     "src/index.ts",
     "export const hello = 'updated';",
@@ -401,7 +478,7 @@ try {
 
 ```typescript
 try {
-  const response = await projectsClient.createFolder(
+  const response = await app.projects.createFolder(
     projectId,
     "src/components",
     "Create components folder"
@@ -421,7 +498,7 @@ try {
   const file = fileInput.files?.[0];
 
   if (file) {
-    const response = await projectsClient.uploadFile(
+    const response = await app.projects.uploadFile(
       projectId,
       file,
       `images/${file.name}`
@@ -438,7 +515,7 @@ try {
 
 ```typescript
 try {
-  const response = await projectsClient.starFile(projectId, "src/index.ts");
+  const response = await app.projects.starFile(projectId, "src/index.ts");
   console.log("File starred successfully");
 } catch (error) {
   console.error("Failed to star file:", error.message);
@@ -449,7 +526,7 @@ try {
 
 ```typescript
 try {
-  const { isStarred } = await projectsClient.checkIsStarred(projectId, "src/index.ts");
+  const { isStarred } = await app.projects.checkIsStarred(projectId, "src/index.ts");
   console.log("File is starred:", isStarred);
 } catch (error) {
   console.error("Failed to check starred status:", error.message);
@@ -460,7 +537,7 @@ try {
 
 ```typescript
 try {
-  const response = await projectsClient.getStarredFiles();
+  const response = await app.projects.getStarredFiles();
   console.log("Total starred files:", response.count);
   response.stareds.forEach(starred => {
     console.log(`${starred.path} in ${starred.project.name}`);
@@ -474,7 +551,7 @@ try {
 
 ```typescript
 try {
-  const response = await projectsClient.unstarFile(projectId, "src/index.ts");
+  const response = await app.projects.unstarFile(projectId, "src/index.ts");
   console.log("File unstarred successfully");
 } catch (error) {
   console.error("Failed to unstar file:", error.message);
@@ -485,7 +562,7 @@ try {
 
 ```typescript
 try {
-  const response = await projectsClient.updateProject(
+  const response = await app.projects.updateProject(
     projectId,
     "Updated Project Name",
     "Updated description"
@@ -501,10 +578,10 @@ try {
 ```typescript
 try {
   // Delete only from database
-  await projectsClient.deleteProject(projectId);
+  await app.projects.deleteProject(projectId);
 
   // Or delete from both database and GitHub
-  await projectsClient.deleteProject(projectId, true);
+  await app.projects.deleteProject(projectId, true);
   console.log("Project deleted successfully");
 } catch (error) {
   console.error("Failed to delete project:", error.message);

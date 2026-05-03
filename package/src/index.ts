@@ -3,6 +3,7 @@ export { EptaFilesClient } from "./filesClient";
 export { EptaShortUrlClient } from "./shorturlClient";
 export { EptaGitHubClient } from "./githubClient";
 export { EptaProjectsClient } from "./projectsClient";
+export { EptaApp, default as EptaAppDefault } from "./app";
 export type {
   User,
   AuthResponse,
