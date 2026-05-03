@@ -4,6 +4,7 @@ export { EptaShortUrlClient } from "./shorturlClient";
 export { EptaGitHubClient } from "./githubClient";
 export { EptaProjectsClient } from "./projectsClient";
 export { EptaApp, default as EptaAppDefault } from "./app";
+export { getDefaultApiUrl, setDefaultApiUrl, config } from "./config";
 export type {
   EptaConfig,
   User,

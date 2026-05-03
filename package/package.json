@@ -16,6 +16,7 @@
     "README.md"
   ],
   "scripts": {
+    "prebuild": "node scripts/build-env.js",
     "build": "tsc",
     "watch": "tsc --watch",
     "prepublishOnly": "npm run build"

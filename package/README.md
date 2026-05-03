@@ -8,6 +8,120 @@ A comprehensive TypeScript client library for interacting with the EPTA API. Pro
 npm install @epta/client axios
 ```
 
+## Environment Configuration
+
+The EPTA package automatically reads the API URL from the package's `.env` file at **build time**.
+
+### How It Works
+
+1. **Package Configuration (`.env`):**
+   ```
+   EPTA_API_URL=http://localhost:4000
+   ```
+
+2. **Build Time:**
+   - The build script reads `.env` and generates `src/env-config.ts`
+   - This file is compiled into the final bundle with the actual URL
+
+3. **Runtime:**
+   - The compiled code uses the URL from `env-config.ts`
+   - No need for environment variables or manual configuration in most cases
+
+### Package Developer Setup
+
+**To change the default API URL for the package:**
+
+1. Edit the `.env` file:
+   ```
+   EPTA_API_URL=http://localhost:4000
+   ```
+
+2. Rebuild the package:
+   ```bash
+   npm run build
+   ```
+
+The new URL will be embedded in the compiled code and used by all applications.
+
+### Application Usage (Zero Configuration)
+
+Applications can use the package with zero configuration:
+
+```typescript
+import { EptaApp } from "@epta/client";
+
+// Uses the URL configured in the package's .env
+const app = new EptaApp();
+
+// Add credentials if needed
+app.setToken("your_token");
+```
+
+### Override the Default URL (When Needed)
+
+If you need to use a different API URL at runtime:
+
+```typescript
+import { setDefaultApiUrl, EptaApp } from "@epta/client";
+
+// Override the default URL
+setDefaultApiUrl("http://api.production.com");
+
+// Create instance with new URL
+const app = new EptaApp();
+```
+
+Or with explicit URL:
+
+```typescript
+import { EptaApp } from "@epta/client";
+
+const app = new EptaApp("http://custom-api.com");
+```
+
+### Programmatic Configuration
+
+You can dynamically configure the default URL at runtime:
+
+```typescript
+import { setDefaultApiUrl, getDefaultApiUrl, EptaApp } from "@epta/client";
+
+// Get the current default URL
+const currentUrl = getDefaultApiUrl();
+console.log(currentUrl); // "http://localhost:3000/api"
+
+// Override the default URL for all new instances
+setDefaultApiUrl("http://api.production.com");
+
+// Now all new instances use the new URL
+const app = new EptaApp(); // Uses "http://api.production.com"
+```
+
+### Application Usage Examples
+
+```typescript
+import { EptaApp } from "@epta/client";
+
+// 1. Use the default configured URL (simplest)
+const app = new EptaApp();
+
+// 2. Override with explicit URL
+const app2 = new EptaApp("http://custom-url.com");
+
+// 3. Use default URL with credentials
+const app3 = new EptaApp({
+  token: "your_jwt_token",
+  apiKey: "your_api_key"
+});
+
+// 4. Override with explicit URL and credentials
+const app4 = new EptaApp({
+  url: "http://custom-url.com",
+  token: "your_jwt_token",
+  apiKey: "your_api_key"
+});
+```
+
 ## Usage
 
 ### Basic Setup - Using EptaApp (Recommended)
@@ -15,8 +129,11 @@ npm install @epta/client axios
 ```typescript
 import { EptaApp } from "@epta/client";
 
-// Initialize the app with configuration
-const app = new EptaApp("http://localhost:3000/api");
+// Initialize with default URL from environment (EPTA_API_URL)
+const app = new EptaApp();
+
+// Or with explicit URL
+const app2 = new EptaApp("http://localhost:3000/api");
 
 // Set token after authentication
 app.setToken("your_jwt_token");
@@ -32,37 +149,40 @@ const shortUrl = await app.shortUrl.shortenUrl("https://example.com");
 
 ### Alternative: Initialize with Existing Credentials
 
-You can initialize with token, API key, or both using either individual parameters or a configuration object:
+You can initialize with token, API key, or both using either individual parameters or a configuration object. URL is optional if configured in the package.
 
 **Using individual parameters:**
 ```typescript
 import { EptaApp } from "@epta/client";
 
-// With JWT token only
+// With explicit URL and JWT token
 const app = new EptaApp("http://localhost:3000/api", "your_jwt_token");
 
-// With API key only
+// With explicit URL and API key
 const app2 = new EptaApp("http://localhost:3000/api", undefined, "your_api_key");
 
-// With both token and API key
+// With explicit URL, token, and API key
 const app3 = new EptaApp(
   "http://localhost:3000/api",
   "your_jwt_token",
   "your_api_key"
 );
+
+// Using package default URL
+const app4 = new EptaApp(undefined, "your_jwt_token");
 ```
 
 **Using a configuration object (Recommended):**
 ```typescript
 import { EptaApp } from "@epta/client";
 
-// With JWT token only
+// With explicit URL and token
 const app = new EptaApp({
   url: "http://localhost:3000/api",
   token: "your_jwt_token"
 });
 
-// With API key only
+// With explicit URL and API key
 const app2 = new EptaApp({
   url: "http://localhost:3000/api",
   apiKey: "your_api_key"
@@ -74,6 +194,15 @@ const app3 = new EptaApp({
   token: "your_jwt_token",
   apiKey: "your_api_key"
 });
+
+// Using package default URL with credentials
+const app4 = new EptaApp({
+  token: "your_jwt_token",
+  apiKey: "your_api_key"
+});
+
+// Minimal: Using only package default URL
+const app5 = new EptaApp();
 ```
 
 Ready to use immediately:

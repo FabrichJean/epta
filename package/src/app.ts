@@ -3,21 +3,16 @@ import { EptaFilesClient } from "./filesClient";
 import { EptaShortUrlClient } from "./shorturlClient";
 import { EptaGitHubClient } from "./githubClient";
 import { EptaProjectsClient } from "./projectsClient";
+import { EptaConfig } from "./types";
+import { getDefaultApiUrl, setDefaultApiUrl } from "./config";
 import axios from "axios";
-
-/**
- * Configuration object for EptaApp
- */
-interface EptaConfig {
-  url: string;
-  token?: string;
-  apiKey?: string;
-}
 
 /**
  * EPTA App Configuration
  * Central configuration and client management for the EPTA API
  * Handles authentication and token injection for all clients
+ * 
+ * URL defaults to EPTA_API_URL from package configuration if not provided
  */
 export class EptaApp {
   private _url: string;
@@ -33,19 +28,37 @@ export class EptaApp {
   public github: EptaGitHubClient;
   public projects: EptaProjectsClient;
 
-  constructor(config: EptaConfig | string, token?: string, apiKey?: string) {
-    // Handle both object config and individual parameters
-    if (typeof config === "string") {
+  constructor(config?: EptaConfig | string, token?: string, apiKey?: string) {
+    let url: string | undefined;
+    let configToken: string | undefined;
+    let configApiKey: string | undefined;
+
+    // Handle different constructor patterns
+    if (!config) {
+      // new EptaApp() - no arguments
+      url = this.getDefaultUrl();
+    } else if (typeof config === "string") {
       // Legacy: new EptaApp(url, token?, apiKey?)
-      this._url = config;
-      this._token = token || null;
-      this._apiKey = apiKey || null;
+      url = config;
+      configToken = token;
+      configApiKey = apiKey;
     } else {
-      // New: new EptaApp({ url, token?, apiKey? })
-      this._url = config.url;
-      this._token = config.token || null;
-      this._apiKey = config.apiKey || null;
+      // New: new EptaApp({ url?, token?, apiKey? })
+      url = config.url || this.getDefaultUrl();
+      configToken = config.token;
+      configApiKey = config.apiKey;
     }
+
+    // Validate that we have a URL
+    if (!url) {
+      throw new Error(
+        "API URL is required. Provide it as a parameter, set the EPTA_API_URL environment variable, or update the package configuration."
+      );
+    }
+
+    this._url = url;
+    this._token = configToken || null;
+    this._apiKey = configApiKey || null;
 
     // Create a centralized axios instance for all clients
     this._axiosInstance = axios.create({
@@ -64,6 +77,15 @@ export class EptaApp {
     this.shortUrl = new EptaShortUrlClient(this._url, this._axiosInstance);
     this.github = new EptaGitHubClient(this._url, this._axiosInstance);
     this.projects = new EptaProjectsClient(this._url, this._axiosInstance);
+  }
+
+  /**
+   * Get the default API URL from package configuration
+   * @private
+   */
+  private getDefaultUrl(): string | undefined {
+    // Get from package configuration (EPTA_API_URL environment variable)
+    return getDefaultApiUrl();
   }
 
   /**

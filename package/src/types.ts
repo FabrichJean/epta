@@ -5,9 +5,10 @@
 
 /**
  * Configuration object for EptaApp
+ * URL is optional if EPTA_API_URL environment variable is set
  */
 export interface EptaConfig {
-  url: string;
+  url?: string;
   token?: string;
   apiKey?: string;
 }
