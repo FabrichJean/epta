@@ -67,3 +67,17 @@ export interface ErrorResponse {
   message?: string;
   statusCode?: number;
 }
+
+// Files API Types
+export interface FileMetadata {
+  buffer: Buffer;
+  contentType: string;
+  filename?: string;
+}
+
+export interface ShortUrlInfo {
+  shortCode: string;
+  originalUrl: string;
+  clicks: number;
+  createdAt: Date;
+}

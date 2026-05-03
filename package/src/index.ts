@@ -1,4 +1,5 @@
 export { EptaAuthClient, default } from "./client";
+export { EptaFilesClient } from "./filesClient";
 export type {
   User,
   AuthResponse,
@@ -9,4 +10,6 @@ export type {
   ApiKeyActionResponse,
   UpdateTokenResponse,
   ErrorResponse,
+  FileMetadata,
+  ShortUrlInfo,
 } from "./types";

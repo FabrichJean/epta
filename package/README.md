@@ -167,6 +167,79 @@ try {
 }
 ```
 
+## Files API
+
+### Basic Setup
+
+```typescript
+import { EptaFilesClient } from "@epta/auth-client";
+
+const filesClient = new EptaFilesClient("http://localhost:3000/api");
+```
+
+### Get File
+
+#### Get file as Buffer (Node.js)
+
+```typescript
+try {
+  const buffer = await filesClient.getFile("short-code-123");
+  console.log("File size:", buffer.length, "bytes");
+} catch (error) {
+  console.error("Failed to get file:", error.message);
+}
+```
+
+#### Get file with metadata
+
+```typescript
+try {
+  const { buffer, contentType, filename } = 
+    await filesClient.getFileWithMetadata("short-code-123");
+  console.log("Content Type:", contentType);
+  console.log("Filename:", filename);
+} catch (error) {
+  console.error("Failed to get file:", error.message);
+}
+```
+
+#### Get file as Blob (Browser)
+
+```typescript
+try {
+  const blob = await filesClient.getFileAsBlob("short-code-123");
+  console.log("Blob size:", blob.size);
+  console.log("Blob type:", blob.type);
+} catch (error) {
+  console.error("Failed to get file:", error.message);
+}
+```
+
+#### Get file as Data URL (Browser - Images, etc.)
+
+```typescript
+try {
+  const dataUrl = await filesClient.getFileAsDataUrl("short-code-123");
+  // Use in <img> tag
+  const img = document.createElement("img");
+  img.src = dataUrl;
+  document.body.appendChild(img);
+} catch (error) {
+  console.error("Failed to get file:", error.message);
+}
+```
+
+#### Download file (Node.js)
+
+```typescript
+try {
+  await filesClient.downloadFile("short-code-123", "./downloaded-file.pdf");
+  console.log("File downloaded successfully");
+} catch (error) {
+  console.error("Failed to download file:", error.message);
+}
+```
+
 ## Error Handling
 
 All methods return promises and throw errors with descriptive messages:
