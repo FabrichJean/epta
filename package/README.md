@@ -21,7 +21,7 @@ const app = new EptaApp("http://localhost:3000/api");
 // Set token after authentication
 app.setToken("your_jwt_token");
 
-// Optional: Set API key
+// Or: Set API key
 app.setApiKey("your_api_key");
 
 // Access all clients through the app
@@ -30,15 +30,24 @@ const projects = await app.projects.getProjects();
 const shortUrl = await app.shortUrl.shortenUrl("https://example.com");
 ```
 
-### Alternative: Initialize with Existing Token
+### Alternative: Initialize with Existing Credentials
+
+You can initialize with token, API key, or both:
 
 ```typescript
 import { EptaApp } from "@epta/client";
 
-const app = new EptaApp(
+// With JWT token only
+const app = new EptaApp("http://localhost:3000/api", "your_jwt_token");
+
+// With API key only
+const app2 = new EptaApp("http://localhost:3000/api", undefined, "your_api_key");
+
+// With both token and API key
+const app3 = new EptaApp(
   "http://localhost:3000/api",
-  "your_existing_jwt_token",
-  "your_optional_api_key"
+  "your_jwt_token",
+  "your_api_key"
 );
 
 // Ready to use immediately
