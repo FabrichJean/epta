@@ -10,7 +10,7 @@ const getConfig = () => {
   const config = {
     // API URL from generated env-config (or fallback)
     apiUrl: ENV.EPTA_API_URL || "http://localhost:3000/api",
-  };
+  };  
 
   return config;
 };

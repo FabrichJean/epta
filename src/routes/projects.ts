@@ -1061,7 +1061,7 @@ router.get('/starred/list', authenticate, async (req: AuthRequest, res: Response
           // If it's a file, return the detailed structure
           if (!Array.isArray(data)) {
             const fileData: any = data;
-            
+
             // Check if a public URL already exists for this file
             let publicUrl = null;
             let shortCode = null;

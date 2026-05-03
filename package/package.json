@@ -1,6 +1,6 @@
 {
-  "name": "@epta/client",
-  "version": "1.0.0",
+  "name": "@fabrich/epta",
+  "version": "1.0.4",
   "description": "TypeScript client for EPTA Auth API",
   "type": "module",
   "main": "./dist/index.js",
