@@ -480,6 +480,149 @@ router.post('/:id/contents/*', authenticate, async (req: AuthRequest, res: Respo
   }
 });
 
+// Update file content
+router.put('/:id/contents/*', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const projectId = parseInt(req.params.id);
+    const path = req.params[0] || ''; // Get everything after /contents/
+    const { content, message } = req.body;
+
+    if (!path) {
+      return res.status(400).json({ error: 'File path is required' });
+    }
+
+    if (content === undefined || content === null) {
+      return res.status(400).json({ error: 'File content is required' });
+    }
+
+    // Get user's GitHub token
+    const ghp = await getUserGithubToken(userId);
+    if (!ghp) {
+      return res.status(401).json({ error: 'GitHub token not found. Please re-authenticate.' });
+    }
+
+    // Get project
+    const project = await prisma.project.findFirst({
+      where: { 
+        id: projectId,
+      },
+      include: {
+        user: {
+          select: { username: true }
+        }
+      }
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const octokit = new Octokit({ auth: ghp });
+    const repoName = (project.metadata as any)?.fullName?.split('/')[1] || project.name;
+    const owner = project.user.username;
+
+    // Convert content to base64
+    const contentBuffer = Buffer.from(content, 'utf-8');
+    const base64Content = contentBuffer.toString('base64');
+
+    try {
+      // First, get the current file to get its SHA (required for updates)
+      const { data: fileData } = await octokit.rest.repos.getContent({
+        owner,
+        repo: repoName,
+        path: path
+      });
+
+      if (Array.isArray(fileData)) {
+        return res.status(400).json({ error: 'Path is a directory, not a file' });
+      }
+
+      // Update file on GitHub with the current file's SHA
+      const { data } = await octokit.rest.repos.createOrUpdateFileContents({
+        owner,
+        repo: repoName,
+        path: path,
+        message: message || `Update ${path}`,
+        content: base64Content,
+        sha: fileData.sha, // Required for updates
+      });
+
+      // Check if short URL already exists for this file
+      let shortUrl = await prisma.shortUrl.findFirst({
+        where: {
+          originalUrl: data.content?.download_url || '',
+          userId
+        }
+      });
+
+      // Generate short code for file serving only if it doesn't exist
+      if (!shortUrl) {
+        let shortCode = generateShortCode();
+        let attempts = 0;
+        while (await prisma.shortUrl.findUnique({ where: { shortCode } })) {
+          shortCode = generateShortCode();
+          attempts++;
+          if (attempts > 10) {
+            shortCode = generateShortCode(8);
+          }
+        }
+
+        // Create short URL in database for direct file access
+        shortUrl = await prisma.shortUrl.create({
+          data: {
+            shortCode,
+            originalUrl: data.content?.download_url || '',
+            userId
+          }
+        });
+      }
+
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const publicUrl = `${baseUrl}/f/${shortUrl.shortCode}`;
+
+      res.json({
+        message: 'File updated successfully',
+        file: {
+          path: path,
+          size: contentBuffer.length,
+          sha: data.content?.sha,
+          url: data.content?.html_url,
+          publicUrl: publicUrl,
+          downloadUrl: `${baseUrl}/s/${shortUrl.shortCode}`,
+          originalDownloadUrl: data.content?.download_url,
+          commit: {
+            sha: data.commit?.sha,
+            message: data.commit?.message,
+            url: data.commit?.html_url,
+          }
+        },
+      });
+    } catch (error: any) {
+      if (error.status === 401) {
+        return res.status(401).json({ 
+          error: 'GitHub authentication failed', 
+          message: 'Your GitHub token is invalid or has been revoked. Please log in again with a new token.',
+          details: error.message 
+        });
+      }
+      if (error.status === 404) {
+        return res.status(404).json({ error: 'File not found' });
+      }
+      if (error.status === 422) {
+        return res.status(400).json({ error: 'Invalid file path or repository state' });
+      }
+      throw error;
+    }
+  } catch (error: any) {
+    console.error('Update file error:', error);
+    res.status(500).json({ 
+      error: 'Failed to update file',
+      message: error.message 
+    });
+  }
+});
+
 router.post('/:id/folders/*', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.userId!;
@@ -847,8 +990,6 @@ router.post('/:projectId/upload', authenticate, upload.single('file'), async (re
         },
       });
     } catch (error: any) {
-      // console.log(error);
-      
       if (error.status === 401) {
         return res.status(401).json({ 
           error: 'GitHub authentication failed', 
@@ -1028,10 +1169,7 @@ router.post('/starred/:projectId', authenticate, async (req: AuthRequest, res: R
     // Verify user exists
     const user = await prisma.user.findUnique({
       where: { id: userId },
-    });
-
-    console.log({user, userId});
-    
+    });    
 
     if (!user) {
       return res.status(401).json({ error: 'User not found or invalid token' });
